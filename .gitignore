@@ -1,0 +1,71 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.db
+*.opendb
+*.aps
+ipch/
+UpgradeLog*.htm
+
+# Build outputs
+[Dd]ebug/
+[Rr]elease/
+[Xx]64/
+[Ww]in32/
+[Bb]in/
+[Ll]ib/
+**/build/output/
+*.obj
+*.lib
+*.pdb
+*.exe
+*.dll
+*.ilk
+*.exp
+*.bsc
+*.tlog
+*.lastbuildstate
+*.recipe
+*.idb
+*.ipdb
+*.iobj
+*.pch
+*.sbr
+
+# Generated pjproject files
+build.mak
+cc-auto.mak
+os-auto.mak
+config.log
+config.status
+
+# Runtime / local config / logs
+smc-psip/log/
+smc-psip/smc-psip/
+*.ini
+PlayFileList/
+
+# Nested git / leftover VCS helpers
+github/
+svn_add
+svn_add.bat
+svn_pset
+svn_pset.bat
+
+# third_party: keep only build project files in git; the rest is third_party.7z (LFS)
+/third_party/*
+!/third_party/build/
+!/third_party/build/**
+!/third_party/README.txt
+/third_party/build/**/output/
+/third_party/build/**/[Dd]ebug/
+/third_party/build/**/[Rr]elease/
+/third_party/build/**/*.user
+
+# Local pack leftovers
+*.7z.tmp
+*.7z.bak

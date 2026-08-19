@@ -1,0 +1,7 @@
+﻿  auddemo.c
+  aectest.c
+  aviplay.c
+LINK : fatal error LNK1104: 无法打开文件“avcodec.lib”
+NMAKE : fatal error U1077: “"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\cl.EXE"”: 返回代码“0x2”
+  Stop.
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.MakeFile.Targets(41,5): error MSB3073: 命令“nmake /NOLOGO /S /f Samples-vc.mak BUILD_MODE=debug VC_VER=14 ARCH=win32”已退出，代码为 2。
