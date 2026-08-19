@@ -39,7 +39,7 @@
 #define _GLOBAL_AUTO_ANSWER_DEFAULT "button"
 #define _GLOBAL_MENU_WEBSITE "http://www.seami.cloud/"
 #define _GLOBAL_MENU_HELP "http://www.seami.cloud/help"
-#define _GLOBAL_HELP_WEBSITE "http://www.seami.cloud/help"
+#define _GLOBAL_HELP_WEBSITE "http://www.seami.cloud/smc-psip/help"
 
 #define _GLOBAL_NAME_NICE _GLOBAL_NAME
 
