@@ -100,14 +100,14 @@ void AddSipAgentDlg::OnBnClickedOk()
 	autoAnswer = ((CButton*)GetDlgItem(IDC_SIPAGENT_AUTOANSWER))->GetCheck();
 
 	number.Trim();
-	if (number.IsEmpty() && !IsNumber((const char*)number.GetString()))
+	if (number.IsEmpty() || !IsNumber((const char*)number.GetString()))
 	{
 		AfxMessageBox(_T("number is empty or number is not number!"));
 		return;
 	}
 
 	name.Trim();
-	if (name.IsEmpty() && !IsNumber((const char*)name.GetString()))
+	if (name.IsEmpty() || !IsNumber((const char*)name.GetString()))
 	{
 		AfxMessageBox(_T("name is empty or name is not number!"));
 		return;
@@ -128,30 +128,23 @@ void AddSipAgentDlg::OnBnClickedOk()
 	}
 
 	port.Trim();
-	if (port.IsEmpty() && !IsNumber((const char*)port.GetString()))
+	if (port.IsEmpty() || !IsNumber((const char*)port.GetString()))
 	{
 		AfxMessageBox(_T("port is empty or port is not number!"));
 		return;
 	}
 
 	count.Trim();
-	if (count.IsEmpty() && !IsNumber((const char*)count.GetString()))
+	if (count.IsEmpty() || !IsNumber((const char*)count.GetString()))
 	{
 		AfxMessageBox(_T("count is empty or count is not number!"));
 		return;
 	}
 
 	regtimeout.Trim();
-	if (regtimeout.IsEmpty() && !IsNumber((const char*)regtimeout.GetString()))
+	if (regtimeout.IsEmpty() || !IsNumber((const char*)regtimeout.GetString()))
 	{
 		AfxMessageBox(_T("regtimeout is empty or period is not number!"));
-		return;
-	}
-
-	regtimeout.Trim();
-	if (regtimeout.IsEmpty() && !IsNumber((const char*)regtimeout.GetString()))
-	{
-		AfxMessageBox(_T("period is empty or period is not number!"));
 		return;
 	}
 

@@ -45,7 +45,7 @@ using namespace MSIP;
 #define new DEBUG_NEW
 #endif
 
-CmainDlg *mainDlg;
+CMainDlg* mainDlg;
 
 static UINT WM_SHELLHOOKMESSAGE;
 
@@ -60,13 +60,13 @@ static bool timerContactBlinkState = false;
 static CString gethostbyaddrThreadResult;
 static DWORD WINAPI gethostbyaddrThread(LPVOID lpParam)
 {
-	CString *addr = (CString *)lpParam;
+	CString* addr = (CString*)lpParam;
 	gethostbyaddrThreadResult = *addr;
-	struct hostent *he = NULL;
+	struct hostent* he = NULL;
 	struct in_addr inaddr;
 	inaddr.S_un.S_addr = inet_addr(CStringA(*addr));
 	if (inaddr.S_un.S_addr != INADDR_NONE && inaddr.S_un.S_addr != INADDR_ANY) {
-		he = gethostbyaddr((char *)&inaddr, 4, AF_INET);
+		he = gethostbyaddr((char*)&inaddr, 4, AF_INET);
 		if (he) {
 			gethostbyaddrThreadResult = he->h_name;
 		}
@@ -75,7 +75,7 @@ static DWORD WINAPI gethostbyaddrThread(LPVOID lpParam)
 	return 0;
 }
 
-static void on_log_call_back(int level, const char *data, int len)
+static void on_log_call_back(int level, const char* data, int len)
 {
 	if (g_log_ptr)
 	{
@@ -83,7 +83,7 @@ static void on_log_call_back(int level, const char *data, int len)
 	}
 }
 
-static void on_reg_state2(pjsua_acc_id acc_id, pjsua_reg_info *info)
+static void on_reg_state2(pjsua_acc_id acc_id, pjsua_reg_info* info)
 {
 	if (!IsWindow(mainDlg->m_hWnd)) {
 		return;
@@ -94,7 +94,7 @@ static void on_reg_state2(pjsua_acc_id acc_id, pjsua_reg_info *info)
 	}
 	else
 	{
-	
+
 		CallStatus* pStatus = new CallStatus;
 		pStatus->code = info->cbparam->code;
 		pStatus->info = (info->cbparam->reason.slen > 0) ? CString(info->cbparam->reason.ptr).Left(info->cbparam->reason.slen) : CString("");
@@ -104,7 +104,7 @@ static void on_reg_state2(pjsua_acc_id acc_id, pjsua_reg_info *info)
 
 }
 
-LRESULT CmainDlg::onRegState2(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onRegState2(WPARAM wParam, LPARAM lParam)
 {
 	int code = wParam;
 	pjsua_acc_id acc_id = lParam;
@@ -116,15 +116,15 @@ LRESULT CmainDlg::onRegState2(WPARAM wParam, LPARAM lParam)
 	}
 
 	UpdateWindowText(_T(""), IDI_DEFAULT, true);
-	
+
 	return 0;
 }
 
 /* Callback from timer when the maximum call duration has been
  * exceeded.
  */
-static void call_timeout_callback(pj_timer_heap_t *timer_heap,
-	struct pj_timer_entry *entry)
+static void call_timeout_callback(pj_timer_heap_t* timer_heap,
+	struct pj_timer_entry* entry)
 {
 	pjsua_call_id call_id = entry->id;
 	pjsua_msg_data msg_data_;
@@ -152,18 +152,18 @@ static void call_timeout_callback(pj_timer_heap_t *timer_heap,
 	pjsua_call_hangup(call_id, 200, NULL, &msg_data_);
 }
 
-static void on_call_state(pjsua_call_id call_id, pjsip_event *e)
+static void on_call_state(pjsua_call_id call_id, pjsip_event* e)
 {
 	if (!IsWindow(mainDlg->m_hWnd)) {
 		return;
 	}
 
-	pjsua_call_info *call_info = new pjsua_call_info();
+	pjsua_call_info* call_info = new pjsua_call_info();
 	if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
 		return;
 	}
 
-	call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(call_info->id);
+	call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(call_info->id);
 	// reset user_data after call transfer
 	if (user_data && user_data->call_id != PJSUA_INVALID_ID && user_data->call_id != call_info->id) {
 		pjsua_call_set_user_data(call_info->id, NULL);
@@ -174,9 +174,9 @@ static void on_call_state(pjsua_call_id call_id, pjsip_event *e)
 		pjsua_call_set_user_data(call_info->id, user_data);
 	}
 
-	
+
 	if (accountSettings.singleMode)
-	{ 
+	{
 		switch (call_info->state) {
 		case PJSIP_INV_STATE_CALLING:
 			msip_call_unhold(call_info);
@@ -254,25 +254,25 @@ static void on_call_state(pjsua_call_id call_id, pjsip_event *e)
 	}
 }
 
-LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 {
-	pjsua_call_info *call_info = (pjsua_call_info *)wParam;
-	call_user_data *user_data = (call_user_data *)lParam;
+	pjsua_call_info* call_info = (pjsua_call_info*)wParam;
+	call_user_data* user_data = (call_user_data*)lParam;
 
 	//-- 
 
-	CString *str = new CString();
+	CString* str = new CString();
 	CString adder;
-	
+
 
 	if (call_info->state != PJSIP_INV_STATE_DISCONNECTED && call_info->state != PJSIP_INV_STATE_CONNECTING && call_info->remote_contact.slen > 0) {
 		SIPURI contactURI;
 		ParseSIPURI(PjToStr(&call_info->remote_contact, TRUE), &contactURI);
 		CString contactDomain = RemovePort(contactURI.domain);
-		struct hostent *he = NULL;
+		struct hostent* he = NULL;
 		if (IsIP(contactDomain)) {
 			HANDLE hThread;
-			CString *addr = new CString;
+			CString* addr = new CString;
 			*addr = contactDomain;
 			hThread = CreateThread(NULL, 0, gethostbyaddrThread, addr, 0, NULL);
 			if (WaitForSingleObject(hThread, 500) == 0) {
@@ -374,7 +374,7 @@ LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 	}
 
 	//--
-	
+
 	CString number = PjToStr(&call_info->remote_info, TRUE);
 	SIPURI sipuri;
 	ParseSIPURI(number, &sipuri);
@@ -460,7 +460,7 @@ LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 				//	BaloonPopup(*str, messagesContact->name, NIIF_INFO);
 				//}
 				//else {
-					BaloonPopup(*str, number, NIIF_INFO);
+				BaloonPopup(*str, number, NIIF_INFO);
 				//}
 			}
 		}
@@ -516,11 +516,11 @@ LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 		if (call_info->state == PJSIP_INV_STATE_DISCONNECTED) {
 			//MessagesContact *messagesContactSelected = messagesDlg->GetMessageContact();
 			//if (!messagesContactSelected || messagesContactSelected->callId == call_info->id || messagesContactSelected->callId == -1) {
-				if (pageDialer)
-				{
-					pageDialer->Clear(false);
-					pageDialer->UpdateCallButton(FALSE, 0);
-				}
+			if (pageDialer)
+			{
+				pageDialer->Clear(false);
+				pageDialer->UpdateCallButton(FALSE, 0);
+			}
 			//}
 			PostMessage(UM_UPDATEWINDOWTEXT, 0, 0);
 		}
@@ -569,7 +569,7 @@ LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 			}
 			else {
 				for (int i = 0; i < count; i++) {
-					RinginDlg *ringinDlg = ringinDlgs.GetAt(i);
+					RinginDlg* ringinDlg = ringinDlgs.GetAt(i);
 					if (call_info->id == ringinDlg->call_id) {
 						if (count == 1) {
 							PlayerStop();
@@ -597,52 +597,53 @@ LRESULT CmainDlg::onCallState(WPARAM wParam, LPARAM lParam)
 
 static void on_call_media_state(pjsua_call_id call_id)
 {
-	pjsua_call_info *call_info = new pjsua_call_info();
+	pjsua_call_info* call_info = new pjsua_call_info();
 	if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
 		return;
 	}
 
-	call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(call_info->id);
+	call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(call_info->id);
 
 	if (call_info->media_status == PJSUA_CALL_MEDIA_ACTIVE
 		|| call_info->media_status == PJSUA_CALL_MEDIA_REMOTE_HOLD
 		) {
 		msip_conference_join(call_info);
-		pjsua_conf_connect(call_info->conf_slot, 0);
-		pjsua_conf_connect(0, call_info->conf_slot);
-		pjmedia_port *player_media_port;
-		if ( user_data->play_id != PJSUA_INVALID_ID && pjsua_player_get_port(user_data->play_id, &player_media_port) == PJ_SUCCESS)
-		{
-			pjsua_conf_connect(pjsua_player_get_conf_port(user_data->play_id), call_info->conf_slot);
+		pjsua_player_id play_id = PJSUA_INVALID_ID;
+		if (user_data && user_data->play_id != PJSUA_INVALID_ID) {
+			play_id = user_data->play_id;
 		}
-		//--
-		//--
+		else if (mainDlg && mainDlg->GetPlayerMultipleId() != PJSUA_INVALID_ID) {
+			play_id = mainDlg->GetPlayerMultipleId();
+		}
+		if (play_id != PJSUA_INVALID_ID && call_info->conf_slot != PJSUA_INVALID_ID) {
+			pjsua_conf_connect(pjsua_player_get_conf_port(play_id), call_info->conf_slot);
+		}
 		if (mainDlg->GetDialer())
 		{
 			::SetTimer(mainDlg->GetDialer()->m_hWnd, IDT_TIMER_VU_METER, 100, NULL);
 		}
-		//--
 	}
 	else {
 		msip_conference_leave(call_info, true);
-		pjsua_conf_disconnect(call_info->conf_slot, 0);
-		pjsua_conf_disconnect(0, call_info->conf_slot);
 		call_deinit_tonegen(call_id);
-		pjmedia_port *player_media_port;
-		if (user_data->play_id != PJSUA_INVALID_ID && pjsua_player_get_port(user_data->play_id, &player_media_port) == PJ_SUCCESS)
-		{
-			pjsua_conf_disconnect(pjsua_player_get_conf_port(user_data->play_id), call_info->conf_slot);
+		pjsua_player_id play_id = PJSUA_INVALID_ID;
+		if (user_data && user_data->play_id != PJSUA_INVALID_ID) {
+			play_id = user_data->play_id;
 		}
-		//--
-		//--
+		else if (mainDlg && mainDlg->GetPlayerMultipleId() != PJSUA_INVALID_ID) {
+			play_id = mainDlg->GetPlayerMultipleId();
+		}
+		if (play_id != PJSUA_INVALID_ID && call_info->conf_slot != PJSUA_INVALID_ID) {
+			pjsua_conf_disconnect(pjsua_player_get_conf_port(play_id), call_info->conf_slot);
+		}
 	}
 	PostMessage(mainDlg->m_hWnd, UM_ON_CALL_MEDIA_STATE, (WPARAM)call_info, (LPARAM)user_data);
 }
 
-LRESULT CmainDlg::onCallMediaState(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCallMediaState(WPARAM wParam, LPARAM lParam)
 {
-	pjsua_call_info *call_info = (pjsua_call_info *)wParam;
-	call_user_data *user_data = (call_user_data *)lParam;
+	pjsua_call_info* call_info = (pjsua_call_info*)wParam;
+	call_user_data* user_data = (call_user_data*)lParam;
 
 	//messagesDlg->UpdateHoldButton(call_info);
 
@@ -674,6 +675,12 @@ LRESULT CmainDlg::onCallMediaState(WPARAM wParam, LPARAM lParam)
 		|| call_info->media_status == PJSUA_CALL_MEDIA_REMOTE_HOLD
 		) {
 		onRefreshLevels(0, 0);
+		if (pageCalls) {
+			pageCalls->OnCallMediaChanged(call_info->id, true);
+		}
+	}
+	else if (pageCalls) {
+		pageCalls->OnCallMediaChanged(call_info->id, false);
 	}
 
 	delete call_info;
@@ -683,7 +690,7 @@ LRESULT CmainDlg::onCallMediaState(WPARAM wParam, LPARAM lParam)
 
 static void on_call_media_event(pjsua_call_id call_id,
 	unsigned med_idx,
-	pjmedia_event *event)
+	pjmedia_event* event)
 {
 	char event_name[5];
 
@@ -719,12 +726,12 @@ static void on_call_media_event(pjsua_call_id call_id,
 }
 
 static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
-	pjsip_rx_data *rdata)
+	pjsip_rx_data* rdata)
 {
 	pjsua_call_info call_info;
 	pjsua_call_get_info(call_id, &call_info);
 
-	call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(call_info.id);
+	call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(call_info.id);
 	if (!user_data) {
 		user_data = new call_user_data(call_info.id);
 		pjsua_call_set_user_data(call_info.id, user_data);
@@ -733,8 +740,8 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 	SIPURI sipuri;
 	ParseSIPURI(PjToStr(&call_info.remote_info, TRUE), &sipuri);
 	if (accountSettings.forceCodec) {
-		pjsua_call *call;
-		pjsip_dialog *dlg;
+		pjsua_call* call;
+		pjsip_dialog* dlg;
 		pj_status_t status;
 		status = acquire_call("on_incoming_call()", call_id, &call, &dlg);
 		if (status == PJ_SUCCESS) {
@@ -745,8 +752,8 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 
 	unsigned calls_count = PJSUA_MAX_CALLS;
 	unsigned calls_count_cmp = 0;
-    if (accountSettings.singleMode)
-    {
+	if (accountSettings.singleMode)
+	{
 		pjsua_call_id call_ids[PJSUA_MAX_CALLS];
 		if (pjsua_enum_calls(call_ids, &calls_count) == PJ_SUCCESS) {
 			for (unsigned i = 0; i < calls_count; ++i) {
@@ -773,14 +780,14 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 			pjsua_call_hangup(call_info.id, 486, NULL, NULL);
 			return;
 		}
-    }
+	}
 
 	if (IsWindow(mainDlg->m_hWnd)) {
 		if (accountSettings.singleMode)
 		{
 			// -- diversion
 			const pj_str_t headerDiversion = { "Diversion",9 };
-			pjsip_generic_string_hdr *hsr = NULL;
+			pjsip_generic_string_hdr* hsr = NULL;
 			hsr = (pjsip_generic_string_hdr*)pjsip_msg_find_hdr_by_name(rdata->msg_info.msg, &headerDiversion, NULL);
 			if (hsr) {
 				CString str = PjToStr(&hsr->hvalue, true);
@@ -836,7 +843,7 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 				pjsua_call_hangup(call_info.id, 486, NULL, NULL);
 				return;
 			}
-	
+
 			accountSettings.lastCallNumber = sipuri.user;
 			accountSettings.lastCallHasVideo = false;
 
@@ -854,7 +861,7 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 			}
 			else if (accountSettings.autoAnswer == _T("header")) {
 				//--
-				pjsip_generic_string_hdr *hsr = NULL;
+				pjsip_generic_string_hdr* hsr = NULL;
 				const pj_str_t header = pj_str("X-AUTOANSWER");
 				hsr = (pjsip_generic_string_hdr*)pjsip_msg_find_hdr_by_name(rdata->msg_info.msg, &header, NULL);
 				if (hsr) {
@@ -866,7 +873,7 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 				}
 				//--
 				if (!autoAnswer) {
-					pjsip_generic_string_hdr *hsr = NULL;
+					pjsip_generic_string_hdr* hsr = NULL;
 					const pj_str_t header = pj_str("Call-Info");
 					hsr = (pjsip_generic_string_hdr*)pjsip_msg_find_hdr_by_name(rdata->msg_info.msg, &header, NULL);
 					if (hsr) {
@@ -915,7 +922,7 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 					if (!noRingDialog) {
 						//--
 						const pj_str_t headerUserAgent = { "User-Agent",10 };
-						pjsip_generic_string_hdr *hsr = NULL;
+						pjsip_generic_string_hdr* hsr = NULL;
 						hsr = (pjsip_generic_string_hdr*)pjsip_msg_find_hdr_by_name(rdata->msg_info.msg, &headerUserAgent, NULL);
 						if (hsr) {
 							user_data->userAgent = PjToStr(&hsr->hvalue, true);
@@ -948,7 +955,7 @@ static void on_incoming_call(pjsua_acc_id acc, pjsua_call_id call_id,
 	}
 }
 
-static void on_nat_detect(const pj_stun_nat_detect_result *res)
+static void on_nat_detect(const pj_stun_nat_detect_result* res)
 {
 	if (res->status != PJ_SUCCESS) {
 		pjsua_perror(THIS_FILE, "NAT detection failed", res->status);
@@ -958,7 +965,7 @@ static void on_nat_detect(const pj_stun_nat_detect_result *res)
 			if (IsWindow(mainDlg->m_hWnd)) {
 				CString message;
 				pjsua_acc_config acc_cfg;
-				pj_pool_t *pool;
+				pj_pool_t* pool;
 				pool = pjsua_pool_create("acc_cfg-pjsua", 1000, 1000);
 				if (pool) {
 					pjsua_acc_id ids[PJSUA_MAX_ACC];
@@ -990,7 +997,7 @@ static void on_buddy_state(pjsua_buddy_id buddy_id)
 	if (IsWindow(mainDlg->m_hWnd)) {
 		pjsua_buddy_info buddy_info;
 		if (pjsua_buddy_get_info(buddy_id, &buddy_info) == PJ_SUCCESS) {
-			Contact *contact = (Contact *)pjsua_buddy_get_user_data(buddy_id);
+			Contact* contact = (Contact*)pjsua_buddy_get_user_data(buddy_id);
 			if (contact) {
 				int image;
 				bool ringing = false;
@@ -1020,7 +1027,7 @@ static void on_buddy_state(pjsua_buddy_id buddy_id)
 					{
 						image = MSIP_CONTACT_ICON_ONLINE;
 					}
-											  break;
+					break;
 				default:
 					image = MSIP_CONTACT_ICON_UNKNOWN;
 					break;
@@ -1034,17 +1041,17 @@ static void on_buddy_state(pjsua_buddy_id buddy_id)
 	}
 }
 
-LRESULT CmainDlg::onBuddyState(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onBuddyState(WPARAM wParam, LPARAM lParam)
 {
-	Contact *contact = (Contact *)wParam;
+	Contact* contact = (Contact*)wParam;
 	return 0;
 }
 
-static void on_pager2(pjsua_call_id call_id, const pj_str_t *from, const pj_str_t *to, const pj_str_t *contact, const pj_str_t *mime_type, const pj_str_t *body, pjsip_rx_data *rdata, pjsua_acc_id acc_id)
+static void on_pager2(pjsua_call_id call_id, const pj_str_t* from, const pj_str_t* to, const pj_str_t* contact, const pj_str_t* mime_type, const pj_str_t* body, pjsip_rx_data* rdata, pjsua_acc_id acc_id)
 {
 	if (IsWindow(mainDlg->m_hWnd)) {
-		CString *number = new CString();
-		CString *message = new CString();
+		CString* number = new CString();
+		CString* message = new CString();
 		number->SetString(PjToStr(from, TRUE));
 		message->SetString(PjToStr(body, TRUE));
 		message->Trim();
@@ -1067,12 +1074,12 @@ static void on_pager2(pjsua_call_id call_id, const pj_str_t *from, const pj_str_
 	}
 }
 
-static void on_pager_status2(pjsua_call_id call_id, const pj_str_t *to, const pj_str_t *body, void *user_data, pjsip_status_code status, const pj_str_t *reason, pjsip_tx_data *tdata, pjsip_rx_data *rdata, pjsua_acc_id acc_id)
+static void on_pager_status2(pjsua_call_id call_id, const pj_str_t* to, const pj_str_t* body, void* user_data, pjsip_status_code status, const pj_str_t* reason, pjsip_tx_data* tdata, pjsip_rx_data* rdata, pjsua_acc_id acc_id)
 {
 	if (status != 200) {
 		if (IsWindow(mainDlg->m_hWnd)) {
-			CString *number = new CString();
-			CString *message = new CString();
+			CString* number = new CString();
+			CString* message = new CString();
 			number->SetString(PjToStr(to, TRUE));
 			message->SetString(PjToStr(reason, TRUE));
 			message->Trim();
@@ -1098,18 +1105,18 @@ static void on_pager_status2(pjsua_call_id call_id, const pj_str_t *to, const pj
 
 static void on_call_transfer_status(pjsua_call_id call_id,
 	int status_code,
-	const pj_str_t *status_text,
+	const pj_str_t* status_text,
 	pj_bool_t final,
-	pj_bool_t *p_cont)
+	pj_bool_t* p_cont)
 {
-	pjsua_call_info *call_info = new pjsua_call_info();
+	pjsua_call_info* call_info = new pjsua_call_info();
 	if (pjsua_call_get_info(call_id, call_info) != PJ_SUCCESS || call_info->state == PJSIP_INV_STATE_NULL) {
 		return;
 	}
 
-	call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(call_info->id);
+	call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(call_info->id);
 
-	CString *str = new CString();
+	CString* str = new CString();
 	str->Format(_T("%s: %s"),
 		Translate(_T("Call Transfer")),
 		PjToStr(status_text, TRUE)
@@ -1124,17 +1131,17 @@ static void on_call_transfer_status(pjsua_call_id call_id,
 
 	call_info->last_status = (pjsip_status_code)status_code;
 
-	call_info->call_id.ptr = (char *)user_data;
+	call_info->call_id.ptr = (char*)user_data;
 	call_info->call_id.slen = 0;
 
 	PostMessage(mainDlg->m_hWnd, UM_ON_CALL_TRANSFER_STATUS, (WPARAM)call_info, (LPARAM)str);
 }
 
-LRESULT CmainDlg::onCallTransferStatus(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCallTransferStatus(WPARAM wParam, LPARAM lParam)
 {
-	pjsua_call_info *call_info = (pjsua_call_info *)wParam;
-	call_user_data *user_data = (call_user_data *)call_info->call_id.ptr;
-	CString *str = (CString *)lParam;
+	pjsua_call_info* call_info = (pjsua_call_info*)wParam;
+	call_user_data* user_data = (call_user_data*)call_info->call_id.ptr;
+	CString* str = (CString*)lParam;
 
 
 	//MessagesContact* messagesContact = NULL;
@@ -1154,7 +1161,7 @@ LRESULT CmainDlg::onCallTransferStatus(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-static void on_call_transfer_request2(pjsua_call_id call_id, const pj_str_t *dst, pjsip_status_code *code, pjsua_call_setting *opt)
+static void on_call_transfer_request2(pjsua_call_id call_id, const pj_str_t* dst, pjsip_status_code* code, pjsua_call_setting* opt)
 {
 	SIPURI sipuri;
 	ParseSIPURI(PjToStr(dst, TRUE), &sipuri);
@@ -1198,7 +1205,7 @@ static void on_call_transfer_request2(pjsua_call_id call_id, const pj_str_t *dst
 	}
 }
 
-static void on_call_replace_request2(pjsua_call_id call_id, pjsip_rx_data *rdata, int *st_code, pj_str_t *st_text, pjsua_call_setting *opt)
+static void on_call_replace_request2(pjsua_call_id call_id, pjsip_rx_data* rdata, int* st_code, pj_str_t* st_text, pjsua_call_setting* opt)
 {
 	pjsua_call_info call_info;
 	if (pjsua_call_get_info(call_id, &call_info) == PJ_SUCCESS) {
@@ -1219,10 +1226,10 @@ static void on_call_replaced(pjsua_call_id old_call_id, pjsua_call_id new_call_i
 	}
 }
 
-static void on_mwi_info(pjsua_acc_id acc_id, pjsua_mwi_info *mwi_info)
+static void on_mwi_info(pjsua_acc_id acc_id, pjsua_mwi_info* mwi_info)
 {
 	if (mwi_info->rdata->msg_info.ctype) {
-		const pjsip_ctype_hdr *ctype = mwi_info->rdata->msg_info.ctype;
+		const pjsip_ctype_hdr* ctype = mwi_info->rdata->msg_info.ctype;
 		if (pj_strcmp2(&ctype->media.type, "application") != 0 || pj_strcmp2(&ctype->media.subtype, "simple-message-summary") != 0) {
 			return;
 		}
@@ -1230,7 +1237,7 @@ static void on_mwi_info(pjsua_acc_id acc_id, pjsua_mwi_info *mwi_info)
 	if (!mwi_info->rdata->msg_info.msg->body || !mwi_info->rdata->msg_info.msg->body->len) {
 		return;
 	}
-	pjsip_msg_body *body = mwi_info->rdata->msg_info.msg->body;
+	pjsip_msg_body* body = mwi_info->rdata->msg_info.msg->body;
 	pj_scanner scanner;
 
 	pj_scan_init(&scanner, (char*)body->data, body->len, PJ_SCAN_AUTOSKIP_WS, 0);
@@ -1254,7 +1261,7 @@ static void on_mwi_info(pjsua_acc_id acc_id, pjsua_mwi_info *mwi_info)
 	PostMessage(mainDlg->m_hWnd, UM_ON_MWI_INFO, (WPARAM)hasMail, 0);
 }
 
-LRESULT CmainDlg::onMWIInfo(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onMWIInfo(WPARAM wParam, LPARAM lParam)
 {
 	bool hasMail = (bool)wParam;
 	if (pageDialer)
@@ -1272,7 +1279,7 @@ static void on_dtmf_digit(pjsua_call_id call_id, int digit)
 	call_play_digit(-1, signal);
 }
 
-static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction *tsx, pjsip_event *e)
+static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction* tsx, pjsip_event* e)
 {
 	const pjsip_method info_method = {
 		PJSIP_OTHER_METHOD,
@@ -1284,8 +1291,8 @@ static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction *tsx, pjs
 		*/
 		if (tsx->role == PJSIP_ROLE_UAS && tsx->state == PJSIP_TSX_STATE_TRYING) {
 			if (e->body.tsx_state.type == PJSIP_EVENT_RX_MSG) {
-				pjsip_rx_data *rdata = e->body.tsx_state.src.rdata;
-				pjsip_msg_body *body = rdata->msg_info.msg->body;
+				pjsip_rx_data* rdata = e->body.tsx_state.src.rdata;
+				pjsip_msg_body* body = rdata->msg_info.msg->body;
 				int code = 0;
 				if (body && body->len
 					&& pj_strcmp2(&body->content_type.type, "application") == 0
@@ -1333,7 +1340,7 @@ static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction *tsx, pjs
 				}
 				if (code) {
 					/* Answer incoming INFO */
-					pjsip_tx_data *tdata;
+					pjsip_tx_data* tdata;
 					if (pjsip_endpt_create_response(tsx->endpt, rdata,
 						code, NULL, &tdata) == PJ_SUCCESS
 						) {
@@ -1362,11 +1369,11 @@ static void on_call_tsx_state(pjsua_call_id call_id, pjsip_transaction *tsx, pjs
 	}
 }
 
-CmainDlg::~CmainDlg(void)
+CMainDlg::~CMainDlg(void)
 {
 }
 
-void CmainDlg::OnDestroy()
+void CMainDlg::OnDestroy()
 {
 	if (mmNotificationClient) {
 		delete mmNotificationClient;
@@ -1390,13 +1397,13 @@ void CmainDlg::OnDestroy()
 	CBaseDialog::OnDestroy();
 }
 
-void CmainDlg::PostNcDestroy()
+void CMainDlg::PostNcDestroy()
 {
 	CBaseDialog::PostNcDestroy();
 	delete this;
 }
 
-void CmainDlg::DoDataExchange(CDataExchange* pDX)
+void CMainDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CBaseDialog::DoDataExchange(pDX);
 	//	DDX_Control(pDX, IDD_MAIN, *mainDlg);
@@ -1405,7 +1412,7 @@ void CmainDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_MAIN_STOP, m_ButtonStop);
 }
 
-BEGIN_MESSAGE_MAP(CmainDlg, CBaseDialog)
+BEGIN_MESSAGE_MAP(CMainDlg, CBaseDialog)
 	ON_WM_CREATE()
 	ON_WM_SYSCOMMAND()
 	ON_WM_QUERYENDSESSION()
@@ -1455,15 +1462,15 @@ BEGIN_MESSAGE_MAP(CmainDlg, CBaseDialog)
 	ON_COMMAND(ID_ALWAYS_ON_TOP, OnMenuAlwaysOnTop)
 	ON_COMMAND(ID_LOG, OnMenuLog)
 	ON_COMMAND(ID_EXIT, OnMenuExit)
-	ON_NOTIFY(TCN_SELCHANGE, IDC_MAIN_TAB, &CmainDlg::OnTcnSelchangeTab)
-	ON_NOTIFY(TCN_SELCHANGING, IDC_MAIN_TAB, &CmainDlg::OnTcnSelchangingTab)
+	ON_NOTIFY(TCN_SELCHANGE, IDC_MAIN_TAB, &CMainDlg::OnTcnSelchangeTab)
+	ON_NOTIFY(TCN_SELCHANGING, IDC_MAIN_TAB, &CMainDlg::OnTcnSelchangingTab)
 	ON_COMMAND(ID_MENU_WEBSITE, OnMenuWebsite)
 	ON_COMMAND(ID_MENU_HELP, OnMenuHelp)
 	ON_COMMAND(ID_MENU_ADDL, OnMenuAddl)
 END_MESSAGE_MAP()
 
 
-BOOL CmainDlg::PreTranslateMessage(MSG* pMsg)
+BOOL CMainDlg::PreTranslateMessage(MSG* pMsg)
 {
 	if (accountSettings.enableMediaButtons) {
 		if (pMsg->message == WM_SHELLHOOKMESSAGE) {
@@ -1473,13 +1480,13 @@ BOOL CmainDlg::PreTranslateMessage(MSG* pMsg)
 	return CBaseDialog::PreTranslateMessage(pMsg);
 }
 
-// CmainDlg message handlers
+// CMainDlg message handlers
 
-void CmainDlg::OnBnClickedOk()
+void CMainDlg::OnBnClickedOk()
 {
 }
 
-void CmainDlg::OnBnClickedMenu()
+void CMainDlg::OnBnClickedMenu()
 {
 	m_ButtonMenu.ModifyStyle(BS_DEFPUSHBUTTON, BS_PUSHBUTTON);
 	MainPopupMenu();
@@ -1487,7 +1494,7 @@ void CmainDlg::OnBnClickedMenu()
 }
 
 
-void CmainDlg::OnBnClickedStart()
+void CMainDlg::OnBnClickedStart()
 {
 	if (pageCalls)
 	{
@@ -1496,13 +1503,13 @@ void CmainDlg::OnBnClickedStart()
 
 	//{{ -ddh 2020-7-10 9:49:27
 	std::vector<CString> strFileList;
-	GetPlayFileList(accountSettings.pathExe + CString("\\PlayFileList"),strFileList);
+	GetPlayFileList(accountSettings.pathExe + CString("\\PlayFileList"), strFileList);
 	PlayerMultiplePlay(strFileList);
 
 	//}}
 }
 
-void CmainDlg::OnBnClickedStop()
+void CMainDlg::OnBnClickedStop()
 {
 	if (pageCalls)
 	{
@@ -1513,8 +1520,8 @@ void CmainDlg::OnBnClickedStop()
 	//}}
 }
 
-CmainDlg::CmainDlg(CWnd* pParent /*=NULL*/)
-	: CBaseDialog(CmainDlg::IDD, pParent)
+CMainDlg::CMainDlg(CWnd* pParent /*=NULL*/)
+	: CBaseDialog(CMainDlg::IDD, pParent)
 {
 #ifdef _DEBUG
 	if (AllocConsole()) {
@@ -1585,7 +1592,7 @@ L16/44100/2;LPCM 44 kHz Stereo");
 	Create(IDD, pParent);
 }
 
-int CmainDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
+int CMainDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	ShortcutsLoad();
 	shortcutsEnabled = accountSettings.enableShortcuts;
@@ -1614,7 +1621,7 @@ int CmainDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return CBaseDialog::OnCreate(lpCreateStruct);
 }
 
-BOOL CmainDlg::OnInitDialog()
+BOOL CMainDlg::OnInitDialog()
 {
 	CBaseDialog::OnInitDialog();
 
@@ -1788,7 +1795,7 @@ BOOL CmainDlg::OnInitDialog()
 		tab->SetWindowPos(NULL, 0, 0, tabRect.Width(), tabRect.Height(), SWP_NOZORDER | SWP_NOMOVE);
 	}
 
-	AutoMove(tab->m_hWnd, 0, 0, 100, 0);		
+	AutoMove(tab->m_hWnd, 0, 0, 100, 0);
 	AutoMove(m_ButtonStart.m_hWnd, 92, 0, 0, 0);
 	AutoMove(m_ButtonStop.m_hWnd, 96, 0, 0, 0);
 	AutoMove(m_ButtonMenu.m_hWnd, 100, 0, 0, 0);
@@ -1835,7 +1842,7 @@ BOOL CmainDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-void CmainDlg::OnCreated()
+void CMainDlg::OnCreated()
 {
 	SetPaneText2();
 	if (!m_startMinimized) {
@@ -1878,7 +1885,7 @@ void CmainDlg::OnCreated()
 	}
 }
 
-void CmainDlg::BaloonPopup(CString title, CString message, DWORD flags)
+void CMainDlg::BaloonPopup(CString title, CString message, DWORD flags)
 {
 	if (tnd.hWnd) {
 		lstrcpyn(tnd.szInfo, message, sizeof(tnd.szInfo));
@@ -1890,7 +1897,7 @@ void CmainDlg::BaloonPopup(CString title, CString message, DWORD flags)
 	}
 }
 
-void CmainDlg::OnMenuAccountAdd()
+void CMainDlg::OnMenuAccountAdd()
 {
 	if (!accountSettings.hidden) {
 		if (!accountDlg) {
@@ -1902,7 +1909,7 @@ void CmainDlg::OnMenuAccountAdd()
 		accountDlg->Load(0);
 	}
 }
-void CmainDlg::OnMenuAccountChange(UINT nID)
+void CMainDlg::OnMenuAccountChange(UINT nID)
 {
 	if (accountSettings.accountId) {
 		PJAccountDelete(true);
@@ -1919,7 +1926,7 @@ void CmainDlg::OnMenuAccountChange(UINT nID)
 	mainDlg->PJAccountAdd();
 }
 
-void CmainDlg::OnMenuAccountEdit(UINT nID)
+void CMainDlg::OnMenuAccountEdit(UINT nID)
 {
 	if (!accountDlg) {
 		accountDlg = new AccountDlg(this);
@@ -1931,11 +1938,11 @@ void CmainDlg::OnMenuAccountEdit(UINT nID)
 	accountDlg->Load(id);
 }
 
-void CmainDlg::OnMenuCustomRange(UINT nID)
+void CMainDlg::OnMenuCustomRange(UINT nID)
 {
 }
 
-void CmainDlg::OnMenuSettings()
+void CMainDlg::OnMenuSettings()
 {
 	if (!accountSettings.hidden) {
 		if (!settingsDlg)
@@ -1948,7 +1955,7 @@ void CmainDlg::OnMenuSettings()
 	}
 }
 
-void CmainDlg::OnMenuShortcuts()
+void CMainDlg::OnMenuShortcuts()
 {
 	if (!shortcutsDlg)
 	{
@@ -1959,24 +1966,24 @@ void CmainDlg::OnMenuShortcuts()
 	}
 }
 
-void CmainDlg::OnMenuAlwaysOnTop()
+void CMainDlg::OnMenuAlwaysOnTop()
 {
 	accountSettings.alwaysOnTop = 1 - accountSettings.alwaysOnTop;
 	AccountSettingsPendingSave();
 	SetWindowPos(accountSettings.alwaysOnTop ? &this->wndTopMost : &this->wndNoTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }
 
-void CmainDlg::OnMenuLog()
+void CMainDlg::OnMenuLog()
 {
 	ShellExecute(NULL, NULL, accountSettings.logFile, NULL, NULL, SW_SHOWNORMAL);
 }
 
-void CmainDlg::OnMenuExit()
+void CMainDlg::OnMenuExit()
 {
 	this->DestroyWindow();
 }
 
-LRESULT CmainDlg::onTrayNotify(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onTrayNotify(WPARAM wParam, LPARAM lParam)
 {
 	UINT uMsg = (UINT)lParam;
 	switch (uMsg)
@@ -2016,7 +2023,7 @@ LRESULT CmainDlg::onTrayNotify(WPARAM wParam, LPARAM lParam)
 				// -- show ringing dialogs
 				int count = ringinDlgs.GetCount();
 				for (int i = 0; i < count; i++) {
-					RinginDlg *ringinDlg = ringinDlgs.GetAt(i);
+					RinginDlg* ringinDlg = ringinDlgs.GetAt(i);
 					ringinDlg->ShowWindow(SW_SHOWNORMAL);
 				}
 				// -- show messages dialog
@@ -2036,7 +2043,7 @@ LRESULT CmainDlg::onTrayNotify(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-void CmainDlg::MainPopupMenu()
+void CMainDlg::MainPopupMenu()
 {
 	CString str;
 	CPoint point;
@@ -2045,7 +2052,7 @@ void CmainDlg::MainPopupMenu()
 	menu.CreatePopupMenu();
 	CMenu* tracker = &menu;
 	if (accountSettings.singleMode)
-	{  
+	{
 		// -- add
 		tracker->AppendMenu(MF_STRING, ID_ACCOUNT_ADD, Translate(_T("Add Account...")));
 		//-- edit
@@ -2141,7 +2148,7 @@ void CmainDlg::MainPopupMenu()
 	PostMessage(WM_NULL, 0, 0);
 }
 
-LRESULT CmainDlg::onCreateRingingDlg(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCreateRingingDlg(WPARAM wParam, LPARAM lParam)
 {
 	pjsua_call_id call_id = wParam;
 	pjsua_call_info call_info;
@@ -2150,7 +2157,7 @@ LRESULT CmainDlg::onCreateRingingDlg(WPARAM wParam, LPARAM lParam)
 		return  0;
 	}
 
-	call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(call_info.id);
+	call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(call_info.id);
 
 	RinginDlg* ringinDlg = new RinginDlg(this);
 
@@ -2223,7 +2230,7 @@ LRESULT CmainDlg::onCreateRingingDlg(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onRefreshLevels(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onRefreshLevels(WPARAM wParam, LPARAM lParam)
 {
 	if (pageDialer)
 	{
@@ -2232,10 +2239,10 @@ LRESULT CmainDlg::onRefreshLevels(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onPager(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onPager(WPARAM wParam, LPARAM lParam)
 {
-	CString *number = (CString *)wParam;
-	CString *message = (CString *)lParam;
+	CString* number = (CString*)wParam;
+	CString* message = (CString*)lParam;
 	bool doNotShowMessagesWindow = accountSettings.silent && !mainDlg->IsWindowVisible();
 	if (doNotShowMessagesWindow) {
 		newMessages = true;
@@ -2254,10 +2261,10 @@ LRESULT CmainDlg::onPager(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onPagerStatus(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onPagerStatus(WPARAM wParam, LPARAM lParam)
 {
-	CString *number = (CString *)wParam;
-	CString *message = (CString *)lParam;
+	CString* number = (CString*)wParam;
+	CString* message = (CString*)lParam;
 	bool doNotShowMessagesWindow = accountSettings.silent && !mainDlg->IsWindowVisible();
 	/*MessagesContact* messagesContact = mainDlg->messagesDlg->AddTab(*number,
 		CString(), FALSE, NULL, NULL,
@@ -2270,7 +2277,7 @@ LRESULT CmainDlg::onPagerStatus(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onPowerBroadcast(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onPowerBroadcast(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == PBT_APMRESUMEAUTOMATIC) {
 		PJAccountAdd();
@@ -2281,7 +2288,7 @@ LRESULT CmainDlg::onPowerBroadcast(WPARAM wParam, LPARAM lParam)
 	return TRUE;
 }
 
-LRESULT CmainDlg::OnAccount(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::OnAccount(WPARAM wParam, LPARAM lParam)
 {
 	if (!accountDlg) {
 		accountDlg = new AccountDlg(this);
@@ -2291,7 +2298,7 @@ LRESULT CmainDlg::OnAccount(WPARAM wParam, LPARAM lParam)
 	}
 	accountDlg->Load(accountSettings.accountId);
 	if (wParam && accountDlg) {
-		CEdit *edit = (CEdit*)accountDlg->GetDlgItem(IDC_EDIT_PASSWORD);
+		CEdit* edit = (CEdit*)accountDlg->GetDlgItem(IDC_EDIT_PASSWORD);
 		if (edit) {
 			edit->SetFocus();
 			int nLength = edit->GetWindowTextLength();
@@ -2301,7 +2308,7 @@ LRESULT CmainDlg::OnAccount(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CmainDlg::OnTimerCall()
+void CMainDlg::OnTimerCall()
 {
 	pjsua_call_id call_id;
 	//int duration = messagesDlg->GetCallDuration(&call_id);
@@ -2324,16 +2331,16 @@ void CmainDlg::OnTimerCall()
 		UpdateWindowText(str, icon);
 	}
 	else {*/
-		KillTimer(IDT_TIMER_CALL);
+	KillTimer(IDT_TIMER_CALL);
 	//}
 }
 
-void CmainDlg::OnTimerContactBlink()
+void CMainDlg::OnTimerContactBlink()
 {
 
 }
 
-void CmainDlg::OnTimer(UINT_PTR TimerVal)
+void CMainDlg::OnTimer(UINT_PTR TimerVal)
 {
 	if (TimerVal == IDT_TIMER_AUTOANSWER) {
 		KillTimer(IDT_TIMER_AUTOANSWER);
@@ -2361,7 +2368,7 @@ void CmainDlg::OnTimer(UINT_PTR TimerVal)
 			pjmedia_aud_dev_refresh();
 			UpdateSoundDevicesIds();
 #ifdef _GLOBAL_VIDEO
-			pjmedia_vid_subsys *vid_subsys = pjmedia_get_vid_subsys();
+			pjmedia_vid_subsys* vid_subsys = pjmedia_get_vid_subsys();
 			if (vid_subsys->init_count) {
 				pjmedia_vid_dev_refresh();
 			}
@@ -2414,7 +2421,7 @@ void CmainDlg::OnTimer(UINT_PTR TimerVal)
 			}
 }
 
-void CmainDlg::PJCreate()
+void CMainDlg::PJCreate()
 {
 	player_id = PJSUA_INVALID_ID;
 	player_multiple_id = PJSUA_INVALID_ID;
@@ -2455,7 +2462,7 @@ void CmainDlg::PJCreate()
 	pjsua_media_config   media_cfg;
 	pjsua_transport_config cfg;
 
-	
+
 	// Must create pjsua before anything else!
 	status = pjsua_create();
 	if (status != PJ_SUCCESS) {
@@ -2497,6 +2504,8 @@ void CmainDlg::PJCreate()
 
 	ua_cfg.srtp_secure_signaling = 0;
 	ua_cfg.max_calls = 1024;
+	ua_cfg.thread_cnt = 4;
+	media_cfg.max_media_ports = PJSUA_MAX_CONF_PORTS;
 
 	/*
 	TODO: accountSettings.account: public_addr
@@ -2577,6 +2586,7 @@ void CmainDlg::PJCreate()
 
 	// Set snd devices
 	UpdateSoundDevicesIds();
+	pjsua_set_null_snd_dev();
 
 	//Set aud codecs prio
 	PJ_LOG(3, (THIS_FILE, "Set audio codecs"));
@@ -2785,7 +2795,7 @@ void CmainDlg::PJCreate()
 
 }
 
-void CmainDlg::UpdateSoundDevicesIds()
+void CMainDlg::UpdateSoundDevicesIds()
 {
 	msip_audio_input = -1;
 	msip_audio_output = -2;
@@ -2811,7 +2821,7 @@ void CmainDlg::UpdateSoundDevicesIds()
 	}
 }
 
-void CmainDlg::PJDestroy()
+void CMainDlg::PJDestroy()
 {
 	KillTimer(IDT_TIMER_IDLE);
 	KillTimer(IDT_TIMER_CALL);
@@ -2845,7 +2855,7 @@ void CmainDlg::PJDestroy()
 				}
 			}
 		}
-	
+
 
 		pj_ready = false;
 
@@ -2865,7 +2875,7 @@ void CmainDlg::PJDestroy()
 	}
 }
 
-void CmainDlg::PJAccountConfig(pjsua_acc_config *acc_cfg)
+void CMainDlg::PJAccountConfig(pjsua_acc_config* acc_cfg)
 {
 	pjsua_acc_config_default(acc_cfg);
 #ifdef _GLOBAL_VIDEO
@@ -2886,7 +2896,7 @@ void CmainDlg::PJAccountConfig(pjsua_acc_config *acc_cfg)
 /**
  * Add account is not exists.
  */
-void CmainDlg::PJAccountAdd()
+void CMainDlg::PJAccountAdd()
 {
 	if (accountSettings.singleMode)
 	{
@@ -3002,9 +3012,9 @@ void CmainDlg::PJAccountAdd()
 					ip = host;
 				}
 				else {
-					hostent *he = gethostbyname(CStringA(host));
+					hostent* he = gethostbyname(CStringA(host));
 					if (he) {
-						ip = inet_ntoa(*((struct in_addr *) he->h_addr_list[0]));
+						ip = inet_ntoa(*((struct in_addr*)he->h_addr_list[0]));
 					}
 				}
 				CSocket udpSocket;
@@ -3060,10 +3070,13 @@ void CmainDlg::PJAccountAdd()
 		{
 			for (CallsMapIt it = mainDlg->GetCalls()->GetCallMap().begin(); it != mainDlg->GetCalls()->GetCallMap().end(); ++it)
 			{
+				if (it->second.accid != PJSUA_INVALID_ID && pjsua_acc_is_valid(it->second.accid)) {
+					continue;
+				}
 				pjsua_acc_config acc_cfg;
 				PJAccountConfig(&acc_cfg);
 				pjsua_acc_id cur_acc_id;
-			    
+
 				CString    strURL;
 
 				CString     strRegURL;
@@ -3108,14 +3121,14 @@ void CmainDlg::PJAccountAdd()
 	}
 }
 
-void CmainDlg::PJAccountAddLocal()
+void CMainDlg::PJAccountAddLocal()
 {
 	if (MACRO_ENABLE_LOCAL_ACCOUNT) {
 		pj_status_t status;
 		pjsua_acc_config acc_cfg;
 		PJAccountConfig(&acc_cfg);
 		acc_cfg.priority--;
-		pjsua_transport_data *t = &pjsua_var.tpdata[0];
+		pjsua_transport_data* t = &pjsua_var.tpdata[0];
 		CString localURI;
 		localURI.Format(_T("<sip:%s>"), PjToStr(&t->local_name.host));
 		acc_cfg.id = StrToPjStr(localURI);
@@ -3127,7 +3140,7 @@ void CmainDlg::PJAccountAddLocal()
 /**
  * Delete account if exists.
  */
-void CmainDlg::PJAccountDelete(bool deep)
+void CMainDlg::PJAccountDelete(bool deep)
 {
 
 	if (pjsua_acc_is_valid(account)) {
@@ -3140,7 +3153,7 @@ void CmainDlg::PJAccountDelete(bool deep)
 	UpdateWindowText();
 }
 
-void CmainDlg::PJAccountDeleteLocal()
+void CMainDlg::PJAccountDeleteLocal()
 {
 	if (pjsua_acc_is_valid(account_local)) {
 		pjsua_acc_del(account_local);
@@ -3148,7 +3161,7 @@ void CmainDlg::PJAccountDeleteLocal()
 	}
 }
 
-void CmainDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
+void CMainDlg::OnTcnSelchangeTab(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	CTabCtrl* tab = (CTabCtrl*)GetDlgItem(IDC_MAIN_TAB);
 	int nTab = tab->GetCurSel();
@@ -3156,11 +3169,11 @@ void CmainDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	tci.mask = TCIF_PARAM;
 	tab->GetItem(nTab, &tci);
 	if (tci.lParam > 0) {
-		CWnd* pWnd = (CWnd *)tci.lParam;
+		CWnd* pWnd = (CWnd*)tci.lParam;
 		if (m_tabPrev != -1) {
 			tab->GetItem(m_tabPrev, &tci);
 			if (tci.lParam > 0) {
-				((CWnd *)tci.lParam)->ShowWindow(SW_HIDE);
+				((CWnd*)tci.lParam)->ShowWindow(SW_HIDE);
 			}
 		}
 		pWnd->ShowWindow(SW_SHOW);
@@ -3181,31 +3194,31 @@ void CmainDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-void CmainDlg::OnTcnSelchangingTab(NMHDR *pNMHDR, LRESULT *pResult)
+void CMainDlg::OnTcnSelchangingTab(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	CTabCtrl* tab = (CTabCtrl*)GetDlgItem(IDC_MAIN_TAB);
 	m_tabPrev = tab->GetCurSel();
 	*pResult = FALSE;
 }
 
-LRESULT CmainDlg::OnUpdateWindowText(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::OnUpdateWindowText(WPARAM wParam, LPARAM lParam)
 {
 	UpdateWindowText(_T("-"));
 	return TRUE;
 }
 
-void CmainDlg::TabFocusSet()
+void CMainDlg::TabFocusSet()
 {
 	CTabCtrl* tab = (CTabCtrl*)GetDlgItem(IDC_MAIN_TAB);
 	int nTab = tab->GetCurSel();
 	TC_ITEM tci;
 	tci.mask = TCIF_PARAM;
 	tab->GetItem(nTab, &tci);
-	CWnd* pWnd = (CWnd *)tci.lParam;
+	CWnd* pWnd = (CWnd*)tci.lParam;
 	pWnd->SetFocus();
 }
 
-void CmainDlg::UpdateWindowText(CString text, int icon, bool afterRegister)
+void CMainDlg::UpdateWindowText(CString text, int icon, bool afterRegister)
 {
 	if (text.IsEmpty() && pjsua_var.state == PJSUA_STATE_RUNNING && pjsua_call_get_count()) {
 		return;
@@ -3286,7 +3299,7 @@ void CmainDlg::UpdateWindowText(CString text, int icon, bool afterRegister)
 
 	CString* pPaneText = new CString();
 	*pPaneText = str;
-	
+
 	PostMessage(UM_SET_PANE_TEXT, NULL, (LPARAM)pPaneText);
 
 	if (icon != -1) {
@@ -3329,7 +3342,7 @@ void CmainDlg::UpdateWindowText(CString text, int icon, bool afterRegister)
 	}
 }
 
-void CmainDlg::PublishStatus(bool online, bool init)
+void CMainDlg::PublishStatus(bool online, bool init)
 {
 	bool busy = (accountSettings.denyIncoming == _T("button") && accountSettings.DND);
 	pjrpid_activity presenceStatusNew;
@@ -3371,10 +3384,10 @@ void CmainDlg::PublishStatus(bool online, bool init)
 	}
 }
 
-LRESULT CmainDlg::onCopyData(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCopyData(WPARAM wParam, LPARAM lParam)
 {
 	if (pj_ready) {
-		COPYDATASTRUCT *s = (COPYDATASTRUCT*)lParam;
+		COPYDATASTRUCT* s = (COPYDATASTRUCT*)lParam;
 		if (s && s->dwData == 1) {
 			CString params = (LPCTSTR)s->lpData;
 			CommandLine(params);
@@ -3383,7 +3396,7 @@ LRESULT CmainDlg::onCopyData(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CmainDlg::CommandLine(CString params) {
+void CMainDlg::CommandLine(CString params) {
 	params.Trim();
 	if (!params.IsEmpty()) {
 		int pos = params.Find(_T("msip:"));
@@ -3458,7 +3471,7 @@ void CmainDlg::CommandLine(CString params) {
 	}
 }
 
-bool CmainDlg::GotoTabLParam(LPARAM lParam) {
+bool CMainDlg::GotoTabLParam(LPARAM lParam) {
 	CTabCtrl* tab = (CTabCtrl*)GetDlgItem(IDC_MAIN_TAB);
 	for (int i = 0; i < tab->GetItemCount(); i++) {
 		TC_ITEM tci;
@@ -3471,7 +3484,7 @@ bool CmainDlg::GotoTabLParam(LPARAM lParam) {
 	return false;
 }
 
-bool CmainDlg::GotoTab(int i, CTabCtrl* tab) {
+bool CMainDlg::GotoTab(int i, CTabCtrl* tab) {
 	if (!tab) {
 		tab = (CTabCtrl*)GetDlgItem(IDC_MAIN_TAB);
 	}
@@ -3487,7 +3500,7 @@ bool CmainDlg::GotoTab(int i, CTabCtrl* tab) {
 }
 
 
-void CmainDlg::DialNumberFromCommandLine(CString number) {
+void CMainDlg::DialNumberFromCommandLine(CString number) {
 	GotoTab(0);
 	pjsua_acc_info info;
 	number.Trim('"');
@@ -3500,7 +3513,7 @@ void CmainDlg::DialNumberFromCommandLine(CString number) {
 	if (accountSettings.accountId > 0) {
 		if (pjsua_acc_is_valid(account) &&
 			(get_account_server().IsEmpty() ||
-			(pjsua_acc_get_info(account, &info) == PJ_SUCCESS && info.status == 200)
+				(pjsua_acc_get_info(account, &info) == PJ_SUCCESS && info.status == 200)
 				)
 			) {
 			DialNumber(number);
@@ -3519,7 +3532,7 @@ void CmainDlg::DialNumberFromCommandLine(CString number) {
 	}
 }
 
-void CmainDlg::DialNumber(CString params)
+void CMainDlg::DialNumber(CString params)
 {
 	CString number;
 	CString message;
@@ -3543,7 +3556,7 @@ void CmainDlg::DialNumber(CString params)
 	}
 }
 
-bool CmainDlg::MakeCall(CString number, bool hasVideo)
+bool CMainDlg::MakeCall(CString number, bool hasVideo)
 {
 	if (accountSettings.singleMode && call_get_count_noincoming()) {
 		GotoTab(0);
@@ -3568,7 +3581,7 @@ bool CmainDlg::MakeCall(CString number, bool hasVideo)
 	return false;
 }
 
-bool CmainDlg::MessagesOpen(CString number)
+bool CMainDlg::MessagesOpen(CString number)
 {
 	CString commands;
 	CString numberFormated = FormatNumber(number, &commands);
@@ -3583,7 +3596,7 @@ bool CmainDlg::MessagesOpen(CString number)
 	return false;
 }
 
-void CmainDlg::AutoAnswer(pjsua_call_id call_id)
+void CMainDlg::AutoAnswer(pjsua_call_id call_id)
 {
 	pjsua_call_info call_info;
 	if (pjsua_call_get_info(call_id, &call_info) != PJ_SUCCESS || (call_info.state != PJSIP_INV_STATE_INCOMING && call_info.state != PJSIP_INV_STATE_EARLY)) {
@@ -3595,7 +3608,7 @@ void CmainDlg::AutoAnswer(pjsua_call_id call_id)
 	}
 }
 
-void CmainDlg::ShortcutAction(Shortcut *shortcut)
+void CMainDlg::ShortcutAction(Shortcut* shortcut)
 {
 	switch (shortcut->type) {
 	case MSIP_SHORTCUT_CALL:
@@ -3631,7 +3644,7 @@ void CmainDlg::ShortcutAction(Shortcut *shortcut)
 	}
 }
 
-LRESULT CmainDlg::onPlayerPlay(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onPlayerPlay(WPARAM wParam, LPARAM lParam)
 {
 	CString filename;
 	BOOL noLoop;
@@ -3683,7 +3696,7 @@ LRESULT CmainDlg::onPlayerPlay(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onPlayerStop(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onPlayerStop(WPARAM wParam, LPARAM lParam)
 {
 	PlayerStop();
 	return 0;
@@ -3692,7 +3705,7 @@ LRESULT CmainDlg::onPlayerStop(WPARAM wParam, LPARAM lParam)
 
 struct pjsua_player_eof_data
 {
-	pj_pool_t          *pool;
+	pj_pool_t* pool;
 	pjsua_player_id player_id;
 };
 
@@ -3702,17 +3715,17 @@ static PJ_DEF(pj_status_t) on_pjsua_wav_file_end_callback(pjmedia_port* media_po
 	return -1;//Here it is important to return value other than PJ_SUCCESS
 }
 
-void CmainDlg::PlayerPlay(CString filename, bool noLoop, bool inCall)
+void CMainDlg::PlayerPlay(CString filename, bool noLoop, bool inCall)
 {
 	PlayerStop();
 	if (pjsua_var.state != PJSUA_STATE_NULL && !filename.IsEmpty()) {
 		pj_str_t file = StrToPjStr(filename);
 		if (pjsua_var.mconf && pjsua_player_create(&file, noLoop ? PJMEDIA_FILE_NO_LOOP : 0, &player_id) == PJ_SUCCESS) {
-			pjmedia_port *player_media_port;
+			pjmedia_port* player_media_port;
 			if (pjsua_player_get_port(player_id, &player_media_port) == PJ_SUCCESS) {
 				if (noLoop) {
-					pj_pool_t *pool = pjsua_pool_create("smc-psip_eof_data", 512, 512);
-					struct pjsua_player_eof_data *eof_data = PJ_POOL_ZALLOC_T(pool, struct pjsua_player_eof_data);
+					pj_pool_t* pool = pjsua_pool_create("smc-psip_eof_data", 512, 512);
+					struct pjsua_player_eof_data* eof_data = PJ_POOL_ZALLOC_T(pool, struct pjsua_player_eof_data);
 					eof_data->pool = pool;
 					eof_data->player_id = player_id;
 					pjmedia_wav_player_set_eof_cb(player_media_port, eof_data, &on_pjsua_wav_file_end_callback);
@@ -3730,7 +3743,7 @@ void CmainDlg::PlayerPlay(CString filename, bool noLoop, bool inCall)
 	}
 }
 
-void CmainDlg::PlayerStop()
+void CMainDlg::PlayerStop()
 {
 	if (player_id != PJSUA_INVALID_ID) {
 		if (pjsua_var.state != PJSUA_STATE_NULL) {
@@ -3745,7 +3758,7 @@ void CmainDlg::PlayerStop()
 	}
 }
 
-void CmainDlg::PlayerMultiplePlay(std::vector<CString> strFileList)
+void CMainDlg::PlayerMultiplePlay(std::vector<CString> strFileList)
 {
 
 	if (player_multiple_id == PJSUA_INVALID_ID && pjsua_var.state != PJSUA_STATE_NULL)
@@ -3759,24 +3772,20 @@ void CmainDlg::PlayerMultiplePlay(std::vector<CString> strFileList)
 
 		for (i = 0; i < strFileList.size() && i < count; ++i)
 		{
-			const CString &file_name = strFileList[i];
+			const CString& file_name = strFileList[i];
 
 			pj_files[i] = StrToPjStr(file_name);
 		}
 
 		if (pjsua_var.mconf && pjsua_playlist_create(pj_files, i, &pj_lbl, 0, &player_multiple_id) == PJ_SUCCESS)
 		{
-			pjmedia_port *player_media_port;
-			if (pjsua_player_get_port(player_multiple_id, &player_media_port) == PJ_SUCCESS) 
-			{
-				pjsua_conf_connect(pjsua_player_get_conf_port(player_multiple_id), 0);
-			}
+			// Keep the playlist as a per-call RTP source; do not mix it onto sound-card slot 0.
 		}
 	}
 }
 
 
-void CmainDlg::PlayerMultipleStop( )
+void CMainDlg::PlayerMultipleStop()
 {
 	if (player_multiple_id != PJSUA_INVALID_ID) {
 		if (pjsua_var.state != PJSUA_STATE_NULL) {
@@ -3791,7 +3800,7 @@ void CmainDlg::PlayerMultipleStop( )
 	}
 }
 
-LRESULT CmainDlg::onShellHookMessage(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onShellHookMessage(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam == HSHELL_APPCOMMAND) {
 		int nCmd = GET_APPCOMMAND_LPARAM(lParam);
@@ -3799,7 +3808,7 @@ LRESULT CmainDlg::onShellHookMessage(WPARAM wParam, LPARAM lParam)
 			nCmd == APPCOMMAND_MEDIA_PLAY_PAUSE ||
 			nCmd == APPCOMMAND_MEDIA_STOP) {
 			if (ringinDlgs.GetCount()) {
-				RinginDlg *ringinDlg = ringinDlgs.GetAt(0);
+				RinginDlg* ringinDlg = ringinDlgs.GetAt(0);
 				if (nCmd == APPCOMMAND_MEDIA_STOP) {
 					ringinDlg->OnBnClickedDecline();
 				}
@@ -3829,7 +3838,7 @@ LRESULT CmainDlg::onShellHookMessage(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onCallAnswer(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCallAnswer(WPARAM wParam, LPARAM lParam)
 {
 	if (pjsua_var.state == PJSUA_STATE_RUNNING) {
 		pjsua_call_id call_id = wParam;
@@ -3865,7 +3874,7 @@ LRESULT CmainDlg::onCallAnswer(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onCallHangup(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onCallHangup(WPARAM wParam, LPARAM lParam)
 {
 	if (pjsua_var.state == PJSUA_STATE_RUNNING) {
 		pjsua_call_id call_id = wParam;
@@ -3874,7 +3883,7 @@ LRESULT CmainDlg::onCallHangup(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onTabIconUpdate(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onTabIconUpdate(WPARAM wParam, LPARAM lParam)
 {
 
 	/*if (messagesDlg) {
@@ -3893,7 +3902,7 @@ LRESULT CmainDlg::onTabIconUpdate(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CmainDlg::onSetPaneText(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onSetPaneText(WPARAM wParam, LPARAM lParam)
 {
 	CString* pString = (CString*)lParam;
 	ASSERT(pString != NULL);
@@ -3906,31 +3915,31 @@ LRESULT CmainDlg::onSetPaneText(WPARAM wParam, LPARAM lParam)
 }
 
 
-LRESULT CmainDlg::onSetMultipleRegisterStatus(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onSetMultipleRegisterStatus(WPARAM wParam, LPARAM lParam)
 {
 	int id = (int)wParam;
 	CallStatus* pCallStatus = (CallStatus*)lParam;
 	ASSERT(pCallStatus != NULL);
 	if (pageCalls)
 	{
-		pageCalls->SetCallRegistered(id, pCallStatus->code,pCallStatus->info);
+		pageCalls->SetCallRegistered(id, pCallStatus->code, pCallStatus->info);
 	}
 	delete pCallStatus;
 	return 0;
 }
 
-LRESULT CmainDlg::onSetMultipleCallStatus(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onSetMultipleCallStatus(WPARAM wParam, LPARAM lParam)
 {
 	int id = (int)wParam;
 	CallStatus* pCallStatus = (CallStatus*)lParam;
-	ASSERT(pCallStatus != NULL); 
+	ASSERT(pCallStatus != NULL);
 	switch (pCallStatus->code)
 	{
 	case PJSIP_INV_STATE_CALLING:
 	{
-		call_user_data *user_data = (call_user_data *)pjsua_call_get_user_data(id);
+		call_user_data* user_data = (call_user_data*)pjsua_call_get_user_data(id);
 		// reset user_data after call transfer
-		if (user_data ) 
+		if (user_data)
 		{
 			user_data->play_id = player_multiple_id;
 		}
@@ -3952,13 +3961,13 @@ LRESULT CmainDlg::onSetMultipleCallStatus(WPARAM wParam, LPARAM lParam)
 		pageCalls->SetCallCallStatus(id, pCallStatus);
 	}
 
-	
+
 	delete pCallStatus;
 	pCallStatus = NULL;
 	return 0;
 }
 
-LRESULT CmainDlg::onMultipleIncomingCall(WPARAM wParam, LPARAM lParam) 
+LRESULT CMainDlg::onMultipleIncomingCall(WPARAM wParam, LPARAM lParam)
 {
 	pjsua_call_id call_id = wParam;
 	pjsua_call_info call_info;
@@ -3981,12 +3990,12 @@ LRESULT CmainDlg::onMultipleIncomingCall(WPARAM wParam, LPARAM lParam)
 	if (pageCalls)
 	{
 		Call* pCall = pageCalls->SetCallCallStatus(call_id, EU_CALL_OPR_CALLIN, localsipuri.user, remotesipuri.user, Translate(_T("Incoming Call")), call_info.state);
-		if (pCall && pCall->autoanswer){
+		if (pCall && pCall->autoanswer) {
 			pjsua_call_setting call_setting;
 			pjsua_call_setting_default(&call_setting);
 			call_setting.vid_cnt = lParam > 0 ? 1 : 0;
 			if (pjsua_call_answer2(call_id, &call_setting, 200, NULL, NULL) == PJ_SUCCESS) {
-				
+
 			}
 		}
 	}
@@ -3994,7 +4003,7 @@ LRESULT CmainDlg::onMultipleIncomingCall(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CmainDlg::SetPaneText2(CString str)
+void CMainDlg::SetPaneText2(CString str)
 {
 	if (str.IsEmpty()) {
 		m_bar.SetPaneInfo(1, IDS_STATUSBAR2, SBPS_NOBORDERS, 0);
@@ -4008,7 +4017,7 @@ void CmainDlg::SetPaneText2(CString str)
 	RepositionBars(AFX_IDW_CONTROLBAR_FIRST, AFX_IDW_CONTROLBAR_LAST, IDS_STATUSBAR);
 }
 
-BOOL CmainDlg::CopyStringToClipboard(IN const CString & str)
+BOOL CMainDlg::CopyStringToClipboard(IN const CString& str)
 {
 	// Open the clipboard
 	if (!OpenClipboard())
@@ -4034,7 +4043,7 @@ BOOL CmainDlg::CopyStringToClipboard(IN const CString & str)
 	}
 
 	// Lock the handle, and copy source text to the buffer
-	TCHAR * textCopy = reinterpret_cast<TCHAR *>(GlobalLock(
+	TCHAR* textCopy = reinterpret_cast<TCHAR*>(GlobalLock(
 		hTextCopy));
 	ASSERT(textCopy != NULL);
 	StringCbCopy(textCopy, textCopySize, str.GetString());
@@ -4062,7 +4071,7 @@ BOOL CmainDlg::CopyStringToClipboard(IN const CString & str)
 	return TRUE;
 }
 
-void CmainDlg::OnSysCommand(UINT nID, LPARAM lParam)
+void CMainDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if (nID == SC_CLOSE) {
 		ShowWindow(SW_HIDE);
@@ -4072,24 +4081,24 @@ void CmainDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-BOOL CmainDlg::OnQueryEndSession()
+BOOL CMainDlg::OnQueryEndSession()
 {
 	return TRUE;
 }
 
-void CmainDlg::OnClose()
+void CMainDlg::OnClose()
 {
 	DestroyWindow();
 }
 
-void CmainDlg::OnContextMenu(CWnd *pWnd, CPoint point)
+void CMainDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	CPoint local = point;
 	ScreenToClient(&local);
 	CRect rect;
 	GetClientRect(&rect);
 	int height = 16;
-	CDC *pDC = GetDC();
+	CDC* pDC = GetDC();
 	if (pDC) {
 		int dpiY = GetDeviceCaps(pDC->m_hDC, LOGPIXELSY);
 		height = MulDiv(height, dpiY, 96);
@@ -4104,7 +4113,7 @@ void CmainDlg::OnContextMenu(CWnd *pWnd, CPoint point)
 	}
 }
 
-BOOL CmainDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
+BOOL CMainDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 {
 	if (nEventType == DBT_DEVNODES_CHANGED) {
 		if (pj_ready) {
@@ -4121,7 +4130,7 @@ BOOL CmainDlg::OnDeviceChange(UINT nEventType, DWORD_PTR dwData)
 	return FALSE;
 }
 
-void CmainDlg::OnSessionChange(UINT nSessionState, UINT nId)
+void CMainDlg::OnSessionChange(UINT nSessionState, UINT nId)
 {
 	if (nSessionState == WTS_REMOTE_CONNECT || nSessionState == WTS_CONSOLE_CONNECT) {
 		if (pj_ready) {
@@ -4132,7 +4141,7 @@ void CmainDlg::OnSessionChange(UINT nSessionState, UINT nId)
 	}
 }
 
-void CmainDlg::OnMove(int x, int y)
+void CMainDlg::OnMove(int x, int y)
 {
 	if (IsWindowVisible() && !IsZoomed() && !IsIconic()) {
 		CRect cRect;
@@ -4143,7 +4152,7 @@ void CmainDlg::OnMove(int x, int y)
 	}
 }
 
-void CmainDlg::OnSize(UINT type, int w, int h)
+void CMainDlg::OnSize(UINT type, int w, int h)
 {
 	CBaseDialog::OnSize(type, w, h);
 	if (this->IsWindowVisible() && type == SIZE_RESTORED) {
@@ -4155,57 +4164,57 @@ void CmainDlg::OnSize(UINT type, int w, int h)
 	}
 }
 
-void CmainDlg::SetupJumpList()
+void CMainDlg::SetupJumpList()
 {
 	JumpList jl(_T(_GLOBAL_NAME_NICE));
 	jl.AddTasks();
 }
 
-void CmainDlg::RemoveJumpList()
+void CMainDlg::RemoveJumpList()
 {
 	JumpList jl(_T(_GLOBAL_NAME_NICE));
 	jl.DeleteJumpList();
 }
 
-void CmainDlg::OnMenuWebsite()
+void CMainDlg::OnMenuWebsite()
 {
 	OpenURL(_T(_GLOBAL_MENU_WEBSITE));
 }
 
-void CmainDlg::OnMenuHelp()
+void CMainDlg::OnMenuHelp()
 {
 	OpenURL(_T(_GLOBAL_MENU_HELP));
 }
 
-void CmainDlg::OnMenuAddl()
+void CMainDlg::OnMenuAddl()
 {
 }
 
-LRESULT CmainDlg::onUsersDirectoryLoaded(WPARAM wParam, LPARAM lParam)
+LRESULT CMainDlg::onUsersDirectoryLoaded(WPARAM wParam, LPARAM lParam)
 {
 	PJ_LOG(3, (THIS_FILE, "Users directory loaded"));
-	URLGetAsyncData *response = (URLGetAsyncData *)wParam;
+	URLGetAsyncData* response = (URLGetAsyncData*)wParam;
 	int expires = 0;
 	if (response->statusCode == 200 && !response->body.IsEmpty()) {
 		CXMLFile xmlFile;
 		if (xmlFile.LoadFromStream((BYTE*)response->body.GetBuffer(), response->body.GetLength())) {
 			BOOL ok = FALSE;
 			bool changed = false;
-			CXMLElement *root = xmlFile.GetRoot();
-			CXMLElement *directory = root->GetFirstChild();
+			CXMLElement* root = xmlFile.GetRoot();
+			CXMLElement* directory = root->GetFirstChild();
 			while (directory) {
 				if (directory->GetElementType() == XET_TAG) {
-					CXMLElement *entry = directory->GetFirstChild();
+					CXMLElement* entry = directory->GetFirstChild();
 					while (entry) {
 						if (entry->GetElementType() == XET_TAG) {
-							CXMLElement *data = entry->GetFirstChild();
+							CXMLElement* data = entry->GetFirstChild();
 							CString number;
 							CString name;
 							char presence = -1;
 							while (data) {
 								if (data->GetElementType() == XET_TAG) {
 									CString dataName = data->GetElementName();
-									CXMLElement *value = data->GetFirstChild();
+									CXMLElement* value = data->GetFirstChild();
 									if (value->GetElementType() == XET_TEXT) {
 										if (dataName.CompareNoCase(_T("name")) == 0) {
 											name = Utf8DecodeUni(UnicodeToAnsi(value->GetElementName()));
@@ -4275,7 +4284,7 @@ LRESULT CmainDlg::onUsersDirectoryLoaded(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void CmainDlg::UsersDirectoryLoad()
+void CMainDlg::UsersDirectoryLoad()
 {
 	KillTimer(IDT_TIMER_DIRECTORY);
 	if (!accountSettings.usersDirectory.IsEmpty()) {
@@ -4288,13 +4297,13 @@ void CmainDlg::UsersDirectoryLoad()
 	}
 }
 
-void CmainDlg::AccountSettingsPendingSave()
+void CMainDlg::AccountSettingsPendingSave()
 {
 	KillTimer(IDT_TIMER_SAVE);
 	SetTimer(IDT_TIMER_SAVE, 5000, NULL);
 }
 
-void CmainDlg::CheckUpdates()
+void CMainDlg::CheckUpdates()
 {
 	CInternetSession session;
 	try {
@@ -4335,11 +4344,11 @@ void CmainDlg::CheckUpdates()
 		}
 		session.Close();
 	}
-	catch (CInternetException *e) {}
+	catch (CInternetException* e) {}
 }
 
 #ifdef _GLOBAL_VIDEO
-int CmainDlg::VideoCaptureDeviceId(CString name)
+int CMainDlg::VideoCaptureDeviceId(CString name)
 {
 	unsigned count = 64;
 	pjmedia_vid_dev_info vid_dev_info[64];
@@ -4357,7 +4366,7 @@ int CmainDlg::VideoCaptureDeviceId(CString name)
 	return PJMEDIA_VID_DEFAULT_CAPTURE_DEV;
 }
 
-void CmainDlg::createPreviewWin()
+void CMainDlg::createPreviewWin()
 {
 	if (!previewWin) {
 		previewWin = new Preview(this);
@@ -4367,7 +4376,7 @@ void CmainDlg::createPreviewWin()
 #endif
 
 
-void  CmainDlg::GetPlayFileList(CString strPath,std::vector<CString>& FileList)
+void  CMainDlg::GetPlayFileList(CString strPath, std::vector<CString>& FileList)
 {
 
 	WIN32_FIND_DATA FindData;
@@ -4391,7 +4400,7 @@ void  CmainDlg::GetPlayFileList(CString strPath,std::vector<CString>& FileList)
 		if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)//�����ļ��м�������
 		{
 			CString sTempPath = accountSettings.pathExe + CString("\\") + FindData.cFileName;
-			GetPlayFileList(sTempPath,FileList);
+			GetPlayFileList(sTempPath, FileList);
 			SetLastError(0);
 			continue;
 		}

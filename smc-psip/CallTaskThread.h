@@ -24,6 +24,7 @@ protected:
 	void	CheckDoCall();	   
 	void	DoWorkThread();
 	virtual void OnMakeCallSuccess(pjsua_acc_id accid, pjsua_call_id callid) {};
+	virtual void OnMakeCallFailed(pjsua_acc_id accid) {};
 private:
 	bool	MakeOneCall(const Call& pCall);
 	void	DestroyThread();

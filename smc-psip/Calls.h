@@ -75,14 +75,44 @@ public:
 	void OnCreated();
 
 	CallsMap& GetCallMap() { return m_Calls; }
+	void OnCallMediaChanged(pjsua_call_id callid, bool mediaActive);
+	void SetListenCall(Call *pCall);
+	void SetMicBroadcast(bool enable);
+	void StartCallRecord(Call *pCall, int mode);
+	void StopCallRecord(Call *pCall);
 protected:
 	virtual void OnMakeCallSuccess(pjsua_acc_id accid, pjsua_call_id callid);
+	virtual void OnMakeCallFailed(pjsua_acc_id accid);
 private:
 	CImageList* imageList;
 	int lastDay;
 	int nextKey;
 
 	CallsMap	m_Calls;
+	CString m_listenNumber;
+	int m_recordingCount;
+	CButton m_chkRecord;
+	CComboBox m_cmbRecordMode;
+	CComboBox m_cmbRecordScope;
+	CEdit m_editRecordMax;
+	CEdit m_editRecordDir;
+	CButton m_chkMicBroadcast;
+	CStatic m_lblListen;
+	void CreateMediaBar();
+	void LoadMediaBarFromSettings();
+	void SaveMediaBarToSettings();
+	void AttachPlayback(Call *pCall, bool connect);
+	void ApplyMicToCall(Call *pCall, bool connect);
+	void EnsureSoundDevice(bool need);
+	pjsua_conf_port_id GetLocalPlayPort();
+	pjsua_conf_port_id GetCallConfSlot(Call *pCall);
+	int ResolveRecordMode(Call *pCall);
+	bool ShouldStartRecord(Call *pCall);
+	void ApplyRecordConnect(Call *pCall);
+	Call* FindNextListenCall(Call *exclude);
+	void UpdateCallRowVisual(Call *pCall, int defaultImage = -1);
+	void UpdateListenHint();
+	CString RecordModeText(int mode);
 	void CallSave(Call *pCall);
 	void CallDecode(CString str, Call *pCall);
 	CString CallEncode(Call *pCall);
@@ -93,6 +123,8 @@ private:
 	void MessageDlgOpen(BOOL isCall = FALSE, BOOL hasVideo = FALSE);
 	void OnDumpCallState();
 	void OnCheckCallTask();
+	void SendPendingDtmf(Call *pCall, double elapsed);
+	void ReleasePjsipAccount(Call *pCall);
 	CString DumpMediaStat(const char *indent,const pjmedia_rtcp_stat *stat);
 	bool CallDialDTMF(pjsua_call_id callid, CString strDTMF);
 protected:
@@ -116,6 +148,15 @@ public:
 	afx_msg void OnNMDblclkCalls(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnEndtrack(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnTimer(UINT_PTR TimerVal);
+	afx_msg void OnRecordSettingsChanged();
+	afx_msg void OnMicBroadcastClicked();
+	afx_msg void OnMenuListenCall();
+	afx_msg void OnMenuRecordStart();
+	afx_msg void OnMenuRecordStop();
+	afx_msg void OnMenuRecordModeBoth();
+	afx_msg void OnMenuRecordModeLocal();
+	afx_msg void OnMenuRecordModeRemote();
+	afx_msg void OnCustomDrawCalls(NMHDR *pNMHDR, LRESULT *pResult);
 #ifdef _GLOBAL_VIDEO
 	afx_msg void OnMenuCallVideo(); 
 #endif

@@ -1,4 +1,4 @@
-/* 
+﻿/*
  * Copyright (C) 2011-2018 smc-psip (http://www.seami.cloud)
  *
  * This program is free software; you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #pragma once
@@ -28,23 +28,15 @@
 
 #ifndef _WIN64
 #ifdef NDEBUG
-#ifdef _GLOBAL_VIDEO
 #pragma comment(lib, "libpjproject-i386-Win32-vc14-Release.lib")
-#else
-#pragma comment(lib, "libpjproject-i386-Win32-vc14-Release-Static-NoVideo.lib")
-#endif
 #else
 #pragma comment(lib, "libpjproject-i386-Win32-vc14-Debug.lib")
 #endif
 #else
 #ifdef NDEBUG
-#ifdef _GLOBAL_VIDEO
-#pragma comment(lib, "libpjproject-x86_64-x64-vc14-Release-Static-Video.lib")
+#pragma comment(lib, "libpjproject-x86_64-x64-vc14-Release.lib")
 #else
-#pragma comment(lib, "libpjproject-x86_64-x64-vc14-Release-Static-NoVideo.lib")
-#endif
-#else
-#pragma comment(lib, "libpjproject-x86_64-x64-vc14-Debug-Static.lib")
+#pragma comment(lib, "libpjproject-x86_64-x64-vc14-Debug.lib")
 #endif
 #endif
 
@@ -66,13 +58,13 @@
 #define MAX_FILE_NAMES 		64
 #define MAX_DEV_COUNT		64
 
-// CmainDlg dialog
-class CmainDlg : public CBaseDialog
+ // CMainDlg dialog
+class CMainDlg : public CBaseDialog
 {
 	// Construction
 public:
-	CmainDlg(CWnd* pParent = NULL);	// standard constructor
-	~CmainDlg();
+	CMainDlg(CWnd* pParent = NULL);	// standard constructor
+	~CMainDlg();
 
 	// Dialog Data
 	enum { IDD = IDD_MAIN };
@@ -84,12 +76,12 @@ public:
 	void PJAccountAddLocal();
 	void PJAccountDelete(bool deep = false);
 	void PJAccountDeleteLocal();
-	void PJAccountConfig(pjsua_acc_config *acc_cfg);
+	void PJAccountConfig(pjsua_acc_config* acc_cfg);
 
 	void CommandLine(CString params);
 	void TabFocusSet();
 	void UpdateWindowText(CString = CString(), int icon = IDI_DEFAULT, bool afterRegister = false);
-	void PublishStatus(bool online = true, bool init=false);
+	void PublishStatus(bool online = true, bool init = false);
 	void BaloonPopup(CString title, CString message, DWORD flags = NIIF_WARNING);
 	bool GotoTabLParam(LPARAM lParam);
 	bool GotoTab(int i, CTabCtrl* tab = NULL);
@@ -98,16 +90,17 @@ public:
 	bool MakeCall(CString number, bool hasVideo = false);
 	bool MessagesOpen(CString number);
 	void AutoAnswer(pjsua_call_id call_id);
-	void ShortcutAction(Shortcut *shortcut);
+	void ShortcutAction(Shortcut* shortcut);
 	void PlayerPlay(CString filename, bool noLoop = false, bool inCall = false);
 	void PlayerMultiplePlay(std::vector<CString> strFileList);
 	void PlayerMultipleStop();
-	BOOL CopyStringToClipboard( IN const CString & str );
-	void OnTimerCall ();
+	pjsua_player_id GetPlayerMultipleId() const { return player_multiple_id; }
+	BOOL CopyStringToClipboard(IN const CString& str);
+	void OnTimerCall();
 
 	void UsersDirectoryLoad();
 	void OnTimerContactBlink();
-	afx_msg LRESULT onUsersDirectoryLoaded(WPARAM wParam,LPARAM lParam);
+	afx_msg LRESULT onUsersDirectoryLoaded(WPARAM wParam, LPARAM lParam);
 	void SetupJumpList();
 	void RemoveJumpList();
 	void MainPopupMenu();
@@ -115,10 +108,10 @@ public:
 	void AccountSettingsPendingSave();
 	void UpdateSoundDevicesIds();
 	void PlayerStop();
-	
+
 #ifdef _GLOBAL_VIDEO
 	Preview* previewWin;
-	int VideoCaptureDeviceId(CString name=_T(""));
+	int VideoCaptureDeviceId(CString name = _T(""));
 #endif
 	bool IsShortcutsEnabled() {
 		return shortcutsEnabled;
@@ -128,7 +121,7 @@ public:
 		return shortcutsBottom;
 	}
 
-	CPoint&	GetWindowSize() {
+	CPoint& GetWindowSize() {
 		return windowSize;
 	}
 
@@ -140,7 +133,7 @@ public:
 		return heightAdd;
 	}
 
-	Transfer*	GetTransferDlg() {
+	Transfer* GetTransferDlg() {
 		return transferDlg;
 	}
 
@@ -148,7 +141,7 @@ public:
 		transferDlg = Dlg;
 	}
 
-	Dialer* GetDialer() { 
+	Dialer* GetDialer() {
 		return pageDialer;
 	}
 
@@ -156,7 +149,7 @@ public:
 		pageDialer = dialer;
 	}
 
-	Calls* GetCalls(){ 
+	Calls* GetCalls() {
 		return pageCalls;
 	}
 
@@ -216,7 +209,7 @@ public:
 		autoAnswerCallId = value;
 	}
 
-	CList<CString>& GetAudioCodecList(){
+	CList<CString>& GetAudioCodecList() {
 		return audioCodecList;
 	}
 
@@ -241,7 +234,7 @@ protected:
 	NOTIFYICONDATA tnd;
 	CStatusBar m_bar;
 
-	CMMNotificationClient *mmNotificationClient;
+	CMMNotificationClient* mmNotificationClient;
 
 	unsigned char m_tabPrev;
 
@@ -249,7 +242,7 @@ protected:
 	int m_idleCounter;
 	pjrpid_activity m_PresenceStatus;
 	bool newMessages;
-		
+
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
 	virtual BOOL OnInitDialog();
@@ -257,13 +250,13 @@ protected:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 	// Generated message map functions
-	afx_msg LRESULT OnUpdateWindowText(WPARAM wParam,LPARAM lParam);
+	afx_msg LRESULT OnUpdateWindowText(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onTrayNotify(WPARAM, LPARAM);
 	afx_msg LRESULT onCreateRingingDlg(WPARAM, LPARAM);
-	afx_msg LRESULT onRefreshLevels(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onRegState2(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onCallState(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onMWIInfo(WPARAM wParam,LPARAM lParam);
+	afx_msg LRESULT onRefreshLevels(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onRegState2(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onCallState(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onMWIInfo(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onCallMediaState(WPARAM, LPARAM);
 	afx_msg LRESULT onCallTransferStatus(WPARAM, LPARAM);
 	afx_msg LRESULT onPager(WPARAM, LPARAM);
@@ -281,22 +274,22 @@ public:
 	afx_msg void OnBnClickedStart();
 	afx_msg void OnBnClickedStop();
 	afx_msg void OnClose();
-	afx_msg void OnContextMenu(CWnd *pWnd, CPoint point );
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);
 	afx_msg void OnSessionChange(UINT nSessionState, UINT nId);
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnSize(UINT type, int w, int h);
-	afx_msg LRESULT onShellHookMessage(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onCallAnswer(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onCallHangup(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onTabIconUpdate(WPARAM wParam,LPARAM lParam);
+	afx_msg LRESULT onShellHookMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onCallAnswer(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onCallHangup(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onTabIconUpdate(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onSetPaneText(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onSetMultipleRegisterStatus(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onSetMultipleCallStatus(WPARAM wParam, LPARAM lParam);
 	afx_msg LRESULT onMultipleIncomingCall(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT onPlayerPlay(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT onPlayerStop(WPARAM wParam,LPARAM lParam);
-	afx_msg LRESULT OnAccount(WPARAM wParam,LPARAM lParam);
+	afx_msg LRESULT onPlayerPlay(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT onPlayerStop(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnAccount(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnMenuAccountAdd();
 	afx_msg void OnMenuAccountChange(UINT nID);
 	afx_msg void OnMenuAccountEdit(UINT nID);
@@ -306,9 +299,9 @@ public:
 	afx_msg void OnMenuAlwaysOnTop();
 	afx_msg void OnMenuLog();
 	afx_msg void OnMenuExit();
-	afx_msg void OnTimer (UINT_PTR TimerVal);
-	afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult);
-	afx_msg void OnTcnSelchangingTab(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnTimer(UINT_PTR TimerVal);
+	afx_msg void OnTcnSelchangeTab(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnTcnSelchangingTab(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnMenuWebsite();
 	afx_msg void OnMenuHelp();
 	afx_msg void OnMenuAddl();
@@ -359,4 +352,4 @@ private:
 	CList<int> confernceCalls;
 };
 
-extern CmainDlg *mainDlg;
+extern CMainDlg* mainDlg;

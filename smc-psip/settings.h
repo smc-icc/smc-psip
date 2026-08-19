@@ -91,6 +91,12 @@ struct AccountSettings {
 	Account account;
 	bool singleMode;
 	bool echoToRemote;
+	bool recordEnable;
+	int recordMode;
+	int recordScope;
+	int recordMax;
+	CString recordDir;
+	bool micBroadcast;
 	CString ringingSound;
 	CString audioRingDevice;
 	CString audioOutputDevice;

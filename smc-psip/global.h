@@ -136,6 +136,20 @@ struct MessagesContact {
 	{}
 };
 
+enum RecordMode {
+	RECORD_MODE_FOLLOW = -1,
+	RECORD_MODE_OFF = 0,
+	RECORD_MODE_BOTH = 1,
+	RECORD_MODE_LOCAL = 2,
+	RECORD_MODE_REMOTE = 3
+};
+
+enum RecordScope {
+	RECORD_SCOPE_ALL = 0,
+	RECORD_SCOPE_SELECTED = 1,
+	RECORD_SCOPE_MAX = 2
+};
+
 struct Call {
 
 	Call() {
@@ -155,36 +169,50 @@ struct Call {
 		callStatus = 0;
 		listIndex = 0;
 		lastcalltime = -1;
+		connectTime = 0;
+		lastHangupTime = 0;
+		dtmfSentMask = 0;
+		queued = false;
 		recall = false;
 		dtmf = "";
+		recordMode = RECORD_MODE_FOLLOW;
+		recorder_id = PJSUA_INVALID_ID;
+		listening = false;
 	}
-	int key;								// 列表位置的ID
-	pjsua_acc_id accid;						// 帐号ID
-	pjsua_call_id callid;					// 呼叫ID 有呼叫时才有效
-	CString number;							// 注册帐号
-	CString name;							// 注册的帐号用户
-	CString passwd;							// 帐号密码
-	CString domain;							// 域名
-	CString called;							// 被叫
+	int key;								// ?????????ID
+	pjsua_acc_id accid;						// ???ID
+	pjsua_call_id callid;					// ????ID ?????????????
+	CString number;							// ??????
+	CString name;							// ??????????
+	CString passwd;							// ???????
+	CString domain;							// ????
+	CString called;							// ????
 	CString dtmf;							// DTMF
-	int port;								// 端口
-	int regtimeout;							// 注册周期
-	int callduration; 						// 呼叫周期，-1表示手动
-	int type;								// 帐号操作行为？ 注册，外呼，呼出
-	int autoanswer;							// 自动应答
-	int regCode;							// 帐号注册状态
-	int callStatus;			 				// 帐号呼叫状态
-	int listIndex;							// 在列表中的索引号
-	int dtmfduration;						// 呼叫成功后多久发送dtmf码
-	time_t	lastcalltime;					// 呼叫成功时间
+	int port;								// ???
+	int regtimeout;							// ???????
+	int callduration; 						// ?????????-1??????
+	int type;								// ??????????? ????????????
+	int autoanswer;							// ??????
+	int regCode;							// ????????
+	int callStatus;			 				// ????????
+	int listIndex;							// ????????????????
+	int dtmfduration;						// seconds after CONFIRMED before DTMF
+	time_t	lastcalltime;					// invite time
+	time_t	connectTime;					// CONFIRMED time
+	time_t	lastHangupTime;					// last hangup, recall cooldown
+	unsigned int dtmfSentMask;				// sent DTMF step bits
+	bool queued;							// already in outbound queue
 	bool recall;
+	int recordMode;							// RECORD_MODE_* ; FOLLOW uses global
+	pjsua_recorder_id recorder_id;
+	bool listening;
 };
 
 enum
 {
 	EU_CALL_OPR_NORMAL,
-	EU_CALL_OPR_CALLOUT,		//外呼
-	EU_CALL_OPR_CALLIN,			//来电
+	EU_CALL_OPR_CALLOUT,		//???
+	EU_CALL_OPR_CALLIN,			//????
 };
 
 struct CallStatus {
@@ -222,9 +250,11 @@ struct call_user_data
 			pj_bzero(&auto_hangup_timer, sizeof(auto_hangup_timer));
 			auto_hangup_timer.id = PJSUA_INVALID_ID;
 			play_id = PJSUA_INVALID_ID;
+			recorder_id = PJSUA_INVALID_ID;
 		}
 
 	pjsua_player_id	play_id;
+	pjsua_recorder_id recorder_id;
 };
 
 extern struct call_tonegen_data *tone_gen;

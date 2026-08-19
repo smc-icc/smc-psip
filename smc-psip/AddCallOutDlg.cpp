@@ -114,14 +114,14 @@ void AddCallOutDlg::OnBnClickedOk()
 
 
 	number.Trim();
-	if (number.IsEmpty() && !IsNumber((const char*)number.GetString()))
+	if (number.IsEmpty() || !IsNumber((const char*)number.GetString()))
 	{
 		AfxMessageBox(_T("number is empty or number is not number!"));
 		return;
 	}
 
 	name.Trim();
-	if (name.IsEmpty() && !IsNumber((const char*)name.GetString()))
+	if (name.IsEmpty() || !IsNumber((const char*)name.GetString()))
 	{
 		AfxMessageBox(_T("name is empty or name is not number!"));
 		return;
@@ -142,7 +142,7 @@ void AddCallOutDlg::OnBnClickedOk()
 	}
 
 	port.Trim();
-	if (port.IsEmpty() && !IsNumber((const char*)port.GetString()))
+	if (port.IsEmpty() || !IsNumber((const char*)port.GetString()))
 	{
 		AfxMessageBox(_T("port is empty or port is not number!"));
 		return;
@@ -156,37 +156,32 @@ void AddCallOutDlg::OnBnClickedOk()
 	}
 
 	dtmf.Trim();
-	if (dtmf.GetLength() > 1 || dtmf.GetLength() < 0)
-	{
-		AfxMessageBox(_T("dtmf can only be one character!"));
-		return;
-	}
-
-	dtmfduration.Trim();
-	if (!count.IsEmpty() && !IsNumber((const char*)count.GetString()))
-	{
-		AfxMessageBox(_T("count is empty or count is not number!"));
-		return;
-	}
 
 	count.Trim();
-	if (count.IsEmpty() && !IsNumber((const char*)count.GetString()))
+	if (count.IsEmpty() || !IsNumber((const char*)count.GetString()))
 	{
 		AfxMessageBox(_T("count is empty or count is not number!"));
 		return;
 	}
 
 	duration.Trim();
-	if (duration.IsEmpty() && !IsNumber((const char*)duration.GetString()))
+	if (duration.IsEmpty() || !IsNumber((const char*)duration.GetString()))
 	{
 		AfxMessageBox(_T("period is empty or period is not number!"));
 		return;
 	}  
 
 	regtimeout.Trim();
-	if (regtimeout.IsEmpty() && !IsNumber((const char*)regtimeout.GetString()))
+	if (regtimeout.IsEmpty() || !IsNumber((const char*)regtimeout.GetString()))
 	{
 		AfxMessageBox(_T("period is empty or period is not number!"));
+		return;
+	}
+
+	dtmfduration.Trim();
+	if (!dtmfduration.IsEmpty() && !IsNumber((const char*)dtmfduration.GetString()))
+	{
+		AfxMessageBox(_T("dtmfduration is not number!"));
 		return;
 	}
 

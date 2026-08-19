@@ -509,10 +509,44 @@ void AccountSettings::Init()
 
 	//--
 	ptr = str.GetBuffer(255);
-	GetPrivateProfileString(section, _T("singleMode"), _T("1"), ptr, 256, iniFile);
+	GetPrivateProfileString(section, _T("singleMode"), _T("0"), ptr, 256, iniFile);
 	str.ReleaseBuffer();
 	singleMode = _wtoi(str);  
 	
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("recordEnable"), _T("0"), ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	recordEnable = _wtoi(str) != 0;
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("recordMode"), _T("1"), ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	recordMode = _wtoi(str);
+	if (recordMode < RECORD_MODE_BOTH || recordMode > RECORD_MODE_REMOTE) {
+		recordMode = RECORD_MODE_BOTH;
+	}
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("recordScope"), _T("2"), ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	recordScope = _wtoi(str);
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("recordMax"), _T("10"), ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	recordMax = _wtoi(str);
+	if (recordMax < 1) {
+		recordMax = 10;
+	}
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("recordDir"), NULL, ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	recordDir = str;
+	if (recordDir.IsEmpty()) {
+		recordDir = pathExe + _T("\\Recordings");
+	}
+	ptr = str.GetBuffer(255);
+	GetPrivateProfileString(section, _T("micBroadcast"), _T("0"), ptr, 256, iniFile);
+	str.ReleaseBuffer();
+	micBroadcast = _wtoi(str) != 0;
+
 	//--
 	ptr = str.GetBuffer(255);
 	GetPrivateProfileString(section, _T("echoToRemote"), _T("1"), ptr, 256, iniFile);
@@ -812,6 +846,15 @@ void AccountSettings::SettingsSave()
 	WritePrivateProfileString(section, _T("enableSTUN"), enableSTUN ? _T("1") : _T("0"), iniFile);
 
 	WritePrivateProfileString(section, _T("singleMode"), singleMode ? _T("1") : _T("0"), iniFile);
+	WritePrivateProfileString(section, _T("recordEnable"), recordEnable ? _T("1") : _T("0"), iniFile);
+	str.Format(_T("%d"), recordMode);
+	WritePrivateProfileString(section, _T("recordMode"), str, iniFile);
+	str.Format(_T("%d"), recordScope);
+	WritePrivateProfileString(section, _T("recordScope"), str, iniFile);
+	str.Format(_T("%d"), recordMax);
+	WritePrivateProfileString(section, _T("recordMax"), str, iniFile);
+	WritePrivateProfileString(section, _T("recordDir"), recordDir, iniFile);
+	WritePrivateProfileString(section, _T("micBroadcast"), micBroadcast ? _T("1") : _T("0"), iniFile);
 
 	WritePrivateProfileString(section, _T("echoToRemote"), echoToRemote ? _T("1") : _T("0"), iniFile);
 

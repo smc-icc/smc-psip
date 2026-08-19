@@ -233,7 +233,7 @@ BOOL CSmcPSipApp::InitInstance()
 		g_log_ptr->Set_onLogFileRolled(onLogFileRolled);
 		g_log_ptr->StartLogFileManagerThread();
 	}
-	CmainDlg* mainDlg = new CmainDlg;
+	CMainDlg* mainDlg = new CMainDlg;
 	m_pMainWnd = mainDlg;
 
 	if (!m_pMainWnd) {

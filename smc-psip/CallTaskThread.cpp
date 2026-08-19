@@ -1,6 +1,9 @@
 #include "CallTaskThread.h"
 #include "settings.h"
 
+#define THIS_FILE "CallTaskThread.cpp"
+#define CALL_CPS_INTERVAL_MS 50
+
 int CCallTaskThread::CallTaskWorkThread(void* arg)
 {
 	CCallTaskThread* pThis = (CCallTaskThread*)arg;
@@ -16,6 +19,10 @@ int CCallTaskThread::CallTaskWorkThread(void* arg)
 CCallTaskThread::CCallTaskThread()
 {
 	m_bQuit = FALSE;
+	m_bInit = false;
+	m_Mutex = NULL;
+	m_DoSomeEvent = NULL;
+	m_pThread = NULL;
 	m_CallStack.clear();
 }
 
@@ -27,21 +34,13 @@ CCallTaskThread::~CCallTaskThread()
 bool	CCallTaskThread::Init()
 {
 	pj_status_t status;
-	/*status = pj_thread_init();
-
-	if (status != PJ_SUCCESS)
-		return false;*/
 
 	status = pj_mutex_create_simple(pjsua_get_var()->pool, "call task thread", &m_Mutex);
     
 	if (status != PJ_SUCCESS)
 		return false;
 
-	/*pj_event_create(pjsua_get_var()->pool, "quit thread", PJ_TRUE, PJ_FALSE, &m_QuitEvent);
-	if (status != PJ_SUCCESS)
-		return false;*/
-
-	pj_event_create(pjsua_get_var()->pool, "call task thread", PJ_TRUE, PJ_FALSE, &m_DoSomeEvent);
+	status = pj_event_create(pjsua_get_var()->pool, "call task thread", PJ_TRUE, PJ_FALSE, &m_DoSomeEvent);
 	if (status != PJ_SUCCESS)
 		return false;
 	status = pj_thread_create(pjsua_get_var()->pool, "call task thread", &CallTaskWorkThread, this, 0, 0, &m_pThread);
@@ -56,7 +55,6 @@ bool	CCallTaskThread::UnInit()
 	{
 		m_bQuit = true;
 		pj_event_set(m_DoSomeEvent);
-		//pj_event_set(m_QuitEvent);
 		pj_thread_join(m_pThread);
 		pj_thread_destroy(m_pThread);
 
@@ -79,27 +77,41 @@ void	CCallTaskThread::DoWorkThread()
 
 void	CCallTaskThread::CheckDoCall()
 {
-	pj_mutex_lock(m_Mutex);
-	if (!m_CallStack.empty())
+	while (!m_bQuit)
 	{
-		CallStackIt  CurCall = m_CallStack.begin();
-		Call realCall = *CurCall;
-		m_CallStack.erase(CurCall);
-		MakeOneCall(realCall);
-	}
-	else
-	{
-		pj_event_pulse(m_DoSomeEvent);
-	}
+		Call job;
+		bool have = false;
+		pj_mutex_lock(m_Mutex);
+		if (!m_CallStack.empty())
+		{
+			job = m_CallStack.front();
+			m_CallStack.erase(m_CallStack.begin());
+			have = true;
+		}
+		else
+		{
+			pj_event_reset(m_DoSomeEvent);
+		}
+		pj_mutex_unlock(m_Mutex);
 
-	pj_mutex_unlock(m_Mutex);
+		if (!have) {
+			break;
+		}
+		MakeOneCall(job);
+		pj_thread_sleep(CALL_CPS_INTERVAL_MS);
+	}
 }
 
 bool	CCallTaskThread::AddCall(Call* pCall)
 {
+	if (!pCall || pCall->queued) {
+		return false;
+	}
+	pCall->queued = true;
 	pj_mutex_lock(m_Mutex);
 	m_CallStack.push_back(*pCall);
 	pj_mutex_unlock(m_Mutex);
+	pj_event_set(m_DoSomeEvent);
 	return true;
 }
 
@@ -141,19 +153,21 @@ bool CCallTaskThread::MakeOneCall(const Call& Call)
 		OnMakeCallSuccess(Call.accid, call_id);
 		return true;
 	}
-	else
-	{
-		PJ_LOG(1, (THIS_FILE, "account:%s call out to:%s errorcode:%d", Call.number,Call.called,status));
-	}
 
+	OnMakeCallFailed(Call.accid);
+	PJ_LOG(1, (THIS_FILE, "account:%s call out to:%s errorcode:%d", Call.number,Call.called,status));
 	return false;
 }
 
 
 void CCallTaskThread::DestroyThread()
 {
-	//pj_event_wait(m_QuitEvent);
-	pj_mutex_destroy(m_Mutex);
-	pj_event_destroy(m_DoSomeEvent);
-	//pj_event_destroy(m_QuitEvent);
+	if (m_Mutex) {
+		pj_mutex_destroy(m_Mutex);
+		m_Mutex = NULL;
+	}
+	if (m_DoSomeEvent) {
+		pj_event_destroy(m_DoSomeEvent);
+		m_DoSomeEvent = NULL;
+	}
 }
